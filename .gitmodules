@@ -1,0 +1,3 @@
+[submodule "third_party/evaluate-idk"]
+	path = third_party/evaluate-idk
+	url = https://github.com/JoelNiklaus/evaluate-idk

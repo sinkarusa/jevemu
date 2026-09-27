@@ -1,0 +1,36 @@
+{
+ "meta": {
+  "recorded_at": "2026-09-24T23:24:26+00:00",
+  "base_url": "https://api.typesafe.ai",
+  "jevemu_version": "0.0.1",
+  "source": "tests/golden/fixtures/jev_docs/api__01__request.json",
+  "model": "jev-1.13.0",
+  "request_id": "req_01a0d5bc0d837ca8928792b261b2e28e",
+  "latency_ms": 311.8,
+  "input_tokens": 283,
+  "cost_usd": 1.1886000000000001e-05
+ },
+ "request": {
+  "state": "Help! My payouts have been failing for 3 days.",
+  "model": "jev-1.13.0",
+  "questions": {
+   "is_urgent": {
+    "type": "noul",
+    "instructions": "Does this convey urgency?"
+   }
+  }
+ },
+ "response": {
+  "model": "jev-1.13.0",
+  "answers": {
+   "is_urgent": {
+    "type": "noul",
+    "noul": 0.95
+   }
+  },
+  "usage": {
+   "input_tokens": 283,
+   "output_tokens": 23
+  }
+ }
+}

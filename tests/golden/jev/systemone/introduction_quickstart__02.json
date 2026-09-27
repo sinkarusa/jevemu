@@ -1,0 +1,79 @@
+{
+ "meta": {
+  "recorded_at": "2026-09-24T23:24:26+00:00",
+  "base_url": "https://api.typesafe.ai",
+  "jevemu_version": "0.0.1",
+  "source": "tests/golden/fixtures/jev_docs/introduction_quickstart__02__request.json",
+  "model": "jev-1.13.0",
+  "request_id": "req_01a0d5bc0e3f704d8db62d20bd0b622b",
+  "latency_ms": 328.6,
+  "input_tokens": 425,
+  "cost_usd": 1.7850000000000004e-05
+ },
+ "request": {
+  "state": "Hi, I've been trying to connect my Stripe account for 3 days and the integration keeps failing. I'm losing sales. Please help ASAP.",
+  "model": "jev-1.13.0",
+  "questions": {
+   "department": {
+    "type": "choice",
+    "instructions": "Which team should handle this",
+    "criteria": {
+     "billing": "Payment or subscription issues",
+     "technical": "Bugs or integration problems",
+     "sales": "Pricing or account questions"
+    }
+   },
+   "frustration": {
+    "type": "score",
+    "instructions": "How frustrated the customer appears",
+    "criteria": [
+     "Calm, just stating facts",
+     "Frustrated but civil",
+     "Very angry, strong language"
+    ]
+   },
+   "is_urgent": {
+    "type": "noul",
+    "instructions": "The message conveys urgency or time-sensitivity"
+   }
+  }
+ },
+ "response": {
+  "model": "jev-1.13.0",
+  "answers": {
+   "department": {
+    "type": "choice",
+    "choice": "technical",
+    "confidence": 0.73,
+    "probabilities": {
+     "sales": 0.0,
+     "technical": 0.82,
+     "billing": 0.18
+    }
+   },
+   "frustration": {
+    "type": "score",
+    "score": 1.0,
+    "confidence": 1.0,
+    "legend": {
+     "0": "Calm, just stating facts",
+     "1": "Frustrated but civil",
+     "2": "Very angry, strong language"
+    },
+    "probabilities": {
+     "0": 0.0,
+     "1": 1.0,
+     "2": 0.0
+    }
+   },
+   "is_urgent": {
+    "type": "noul",
+    "noul": 0.99
+   }
+  },
+  "usage": {
+   "input_tokens": 425,
+   "output_tokens": 73
+  }
+ }
+}

@@ -1,0 +1,111 @@
+{
+ "_source": {
+  "repo_id": "allenai/ai2_arc",
+  "filename": "ARC-Challenge/test-00000-of-00001.parquet",
+  "revision": "210d026faf9955653af8916fad021475a3f00453",
+  "sha256": "62f03257e737aed263f55c6abf87c7bb0028a44a6bdd2a26eb1279eb42c1d1e9",
+  "license": "CC-BY-SA-4.0 (https://huggingface.co/datasets/allenai/ai2_arc)",
+  "rows": "first 5 rows in file order"
+ },
+ "format": "parquet",
+ "schema_metadata": {
+  "huggingface": "{\"info\": {\"features\": {\"id\": {\"dtype\": \"string\", \"_type\": \"Value\"}, \"question\": {\"dtype\": \"string\", \"_type\": \"Value\"}, \"choices\": {\"feature\": {\"text\": {\"dtype\": \"string\", \"_type\": \"Value\"}, \"label\": {\"dtype\": \"string\", \"_type\": \"Value\"}}, \"_type\": \"Sequence\"}, \"answerKey\": {\"dtype\": \"string\", \"_type\": \"Value\"}}}}"
+ },
+ "rows": [
+  {
+   "id": "Mercury_7175875",
+   "question": "An astronomer observes that a planet rotates faster after a meteorite impact. Which is the most likely effect of this increase in rotation?",
+   "choices": {
+    "text": [
+     "Planetary density will decrease.",
+     "Planetary years will become longer.",
+     "Planetary days will become shorter.",
+     "Planetary gravity will become stronger."
+    ],
+    "label": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
+   "answerKey": "C"
+  },
+  {
+   "id": "Mercury_SC_409171",
+   "question": "A group of engineers wanted to know how different building designs would respond during an earthquake. They made several models of buildings and tested each for its ability to withstand earthquake conditions. Which will most likely result from testing different building designs?",
+   "choices": {
+    "text": [
+     "buildings will be built faster",
+     "buildings will be made safer",
+     "building designs will look nicer",
+     "building materials will be cheaper"
+    ],
+    "label": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
+   "answerKey": "B"
+  },
+  {
+   "id": "Mercury_SC_408547",
+   "question": "The end result in the process of photosynthesis is the production of sugar and oxygen. Which step signals the beginning of photosynthesis?",
+   "choices": {
+    "text": [
+     "Chemical energy is absorbed through the roots.",
+     "Light energy is converted to chemical energy.",
+     "Chlorophyll in the leaf captures light energy.",
+     "Sunlight is converted into chlorophyll."
+    ],
+    "label": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
+   "answerKey": "C"
+  },
+  {
+   "id": "Mercury_407327",
+   "question": "A physicist wants to determine the speed a car must reach to jump over a ramp. The physicist conducts three trials. In trials two and three, the speed of the car is increased by 20 miles per hour. What is the physicist investigating when he changes the speed?",
+   "choices": {
+    "text": [
+     "the control",
+     "the hypothesis statement",
+     "the dependent (responding) variable",
+     "the independent (manipulated) variable"
+    ],
+    "label": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
+   "answerKey": "D"
+  },
+  {
+   "id": "MCAS_2006_9_44",
+   "question": "An astronaut drops a 1.0 kg object and a 5.0 kg object on the Moon. Both objects fall a total distance of 2.0 m vertically. Which of the following best describes the objects after they have fallen a distance of 1.0 m?",
+   "choices": {
+    "text": [
+     "They have each lost kinetic energy.",
+     "They have each gained the same amount of potential energy.",
+     "They have each lost the same amount of potential energy.",
+     "They have each gained one-half of their maximum kinetic energy."
+    ],
+    "label": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ]
+   },
+   "answerKey": "D"
+  }
+ ]
+}

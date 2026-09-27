@@ -1,0 +1,16 @@
+template_id: state_first-5d29289f8b87
+<<< user >>>
+State:
+The export button crashes the settings page in Safari. It works in Chrome, but a few of our customers only use Safari.
+
+Question:
+How severe is the reported issue?
+
+Levels:
+0) Cosmetic; no impact to functionality
+1) Broken or degraded feature, but workaround exists
+2) Blocking issue; no workaround exists
+
+Respond with the digit only.
+<<< assistant >>>
+Answer:

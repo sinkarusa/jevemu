@@ -1,0 +1,41 @@
+{
+  "state": "Hi, I placed an order (#98423) last Thursday and was charged twice. I also can't log in after the site update, and adding Apple Pay would be really helpful. This is getting frustrating.",
+  "questions": {
+    "category": {
+      "type": "choice",
+      "instructions": "Determine the broad category of this support ticket",
+      "criteria": {
+        "bug_report": "The user is reporting something that is broken or producing errors",
+        "billing": "Charges, invoices, refunds, subscriptions",
+        "feature_request": "The user is requesting new functionality",
+        "account": "Login, permissions, profile, security"
+      }
+    },
+    "bug_severity": {
+      "type": "score",
+      "instructions": "How severe is the reported issue",
+      "criteria": [
+        "Cosmetic; no impact to functionality",
+        "Broken or degraded feature; workaround exists",
+        "Blocking issue; no workaround exists"
+      ]
+    },
+    "has_reproducible_steps": {
+      "type": "noul",
+      "instructions": "The user describes specific steps to reproduce the issue"
+    },
+    "refund_requested": {
+      "type": "noul",
+      "instructions": "The user is explicitly asking for a refund or credit"
+    },
+    "frustration": {
+      "type": "score",
+      "instructions": "How frustrated the user appears",
+      "criteria": [
+        "Calm, matter-of-fact",
+        "Frustrated but civil",
+        "Very angry"
+      ]
+    }
+  }
+}

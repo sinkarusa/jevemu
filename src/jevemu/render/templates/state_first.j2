@@ -1,0 +1,8 @@
+{#- state_first: many questions over one state. The user message opens with the state, the
+    prefix shared across questions, then the question. Exports one variable per role. -#}
+{% import "_blocks.j2" as blocks %}
+{% set user %}
+{{ blocks.state_block(state) }}
+
+{{ blocks.question_block(question) }}
+{%- endset %}

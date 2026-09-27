@@ -1,0 +1,31 @@
+{
+  "state": "Export to PDF fails with a spinner that never finishes. Some of our team say CSV export still works for them, others say it fails too.",
+  "questions": {
+    "bug_severity": {
+      "type": "score",
+      "instructions": "How severe is the reported issue?",
+      "criteria": [
+        {
+          "what": "Cosmetic; no impact to functionality",
+          "examples": [
+            "typo in a label",
+            "misaligned icon"
+          ]
+        },
+        {
+          "what": "Broken or degraded feature, but workaround exists",
+          "examples": [
+            "export fails in one browser but works in another"
+          ]
+        },
+        {
+          "what": "Blocking issue; no workaround exists",
+          "examples": [
+            "cannot log in",
+            "data loss"
+          ]
+        }
+      ]
+    }
+  }
+}

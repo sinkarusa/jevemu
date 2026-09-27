@@ -1,0 +1,16 @@
+template_id: question_first-6f75027397a3
+<<< system >>>
+Read the state in the next message, then answer.
+
+Criteria:
+No: No complaint in the note
+
+Respond with Yes or No only.
+<<< user >>>
+State:
+{
+  "zeta_last_name": "Müller",
+  "alpha_note": "Café order, paid in €"
+}
+<<< assistant >>>
+Answer:

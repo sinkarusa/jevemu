@@ -1,0 +1,8 @@
+Pre-Revision Question,Question,Correct Answer,Incorrect Answer 1,Incorrect Answer 2,Incorrect Answer 3,Explanation,Subdomain,Record ID,High-level domain
+x,"  Synthetic item 1: which value is the placeholder answer?
+", correct one ,wrong one, wrong two,wrong three ,Synthetic.,Synthetic Physics,recSYNTHETIC0001,Physics
+x,Synthetic item 2: pick the option that spans lines.,"line one
+line two",single line a,single line b,single line c,Synthetic.,Synthetic Chemistry,recSYNTHETIC0002,Chemistry
+x,Synthetic item 3: two distractors are identical.,unique correct,same distractor,same distractor,other distractor,Synthetic.,Synthetic Biology,recSYNTHETIC0003,Biology
+x,"Synthetic item 4: symbols α, Δ and ""quotes"", with commas.","α = 1, Δ = 2","α = 2, Δ = 1",α = 0,Δ = 0,Synthetic.,Synthetic Physics,recSYNTHETIC0004,Physics
+x,Synthetic item 5: the last row.,E-like text,A-like text,B-like text,C-like text,Synthetic.,Synthetic Chemistry,recSYNTHETIC0005,Chemistry

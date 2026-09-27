@@ -1,0 +1,42 @@
+{#- Blocks shared by the layout templates. Whitespace is significant: prompts must be
+    byte-stable, and any change here changes every layout's template_id. -#}
+{% macro state_block(state) -%}
+State:
+{{ state | jsonish }}
+{%- endmacro %}
+
+{% macro question_block(q) -%}
+{% if q.instructions is not none %}
+Question:
+{{ q.instructions | jsonish }}
+
+{% endif %}
+{% if q.kind == "choice" %}
+Options:
+{% for o in q.options %}
+{% set description = (": " ~ (o.description | jsonish)) if o.description is not none else "" %}
+{% if q.scheme == "keys" %}
+- {{ o.name }}{{ description }}
+{% else %}
+{{ o.label }}) {{ o.name }}{{ description }}
+{% endif %}
+{% endfor %}
+
+{% elif q.kind == "score" %}
+Levels:
+{% for o in q.options %}
+{{ o.label }}){{ (" " ~ (o.description | jsonish)) if o.description is not none else "" }}
+{% endfor %}
+
+{% else %}
+{% set criteria = q.options | rejectattr("description", "none") | list %}
+{% if criteria %}
+Criteria:
+{% for o in criteria %}
+{{ o.label }}: {{ o.description | jsonish }}
+{% endfor %}
+
+{% endif %}
+{% endif %}
+Respond with {{ {"letters": "the letter", "digits": "the digit", "yes_no": "Yes or No", "keys": "the option name"}[q.scheme] }} only.
+{%- endmacro %}

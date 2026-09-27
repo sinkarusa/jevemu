@@ -1,0 +1,962 @@
+{
+  "choice_easy/first_token": {
+    "strategy": "first_token",
+    "keys": [
+      "fruit",
+      "tool",
+      "vehicle"
+    ],
+    "probabilities": [
+      0.9795862490617219,
+      0.020330664140932413,
+      8.308679734560198e-05
+    ],
+    "observed_mass": 0.9999920016292078,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "choice_easy/constrained": {
+    "strategy": "constrained",
+    "keys": [
+      "fruit",
+      "tool",
+      "vehicle"
+    ],
+    "probabilities": [
+      0.9795862482129637,
+      0.02033066500600822,
+      8.30867810280129e-05
+    ],
+    "observed_mass": 0.9999998276672079,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "choice_easy/trie": {
+    "strategy": "trie",
+    "keys": [
+      "fruit",
+      "tool",
+      "vehicle"
+    ],
+    "probabilities": [
+      0.9998415248852531,
+      0.0001584362297903388,
+      3.8884956584385096e-08
+    ],
+    "observed_mass": 0.9999981640298354,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "choice_easy/echo_sum": {
+    "strategy": "echo_sum",
+    "keys": [
+      "fruit",
+      "tool",
+      "vehicle"
+    ],
+    "probabilities": [
+      0.9997965203400478,
+      0.00020343275652278333,
+      4.6903429407858257e-08
+    ],
+    "observed_mass": 0.9999461620780787,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 3,
+    "warnings": []
+  },
+  "choice_easy/echo_mean": {
+    "strategy": "echo_mean",
+    "keys": [
+      "fruit",
+      "tool",
+      "vehicle"
+    ],
+    "probabilities": [
+      0.9997965203400478,
+      0.00020343275652278333,
+      4.6903429407858257e-08
+    ],
+    "observed_mass": 0.9999461620780787,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 3,
+    "warnings": []
+  },
+  "choice_easy/echo_pmi": {
+    "strategy": "echo_pmi",
+    "keys": [
+      "fruit",
+      "tool",
+      "vehicle"
+    ],
+    "probabilities": [
+      0.999992101270674,
+      7.889486321222334e-06,
+      9.24300514144508e-09
+    ],
+    "observed_mass": 0.9999461620780787,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 6,
+    "warnings": []
+  },
+  "choice_easy/auto": {
+    "strategy": "constrained",
+    "keys": [
+      "fruit",
+      "tool",
+      "vehicle"
+    ],
+    "probabilities": [
+      0.9795862482129637,
+      0.02033066500600822,
+      8.30867810280129e-05
+    ],
+    "observed_mass": 0.9999998276672079,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "choice_prefix_keys/first_token": {
+    "strategy": "first_token",
+    "keys": [
+      "Beaver Logistics",
+      "Dam Logistics",
+      "Beaver Dam Logistics",
+      "Beaver",
+      "Dam"
+    ],
+    "probabilities": [
+      9.422425760637511e-07,
+      1.6373720812950402e-07,
+      0.9999968578934565,
+      1.9947275491801305e-06,
+      4.1399210040279216e-08
+    ],
+    "observed_mass": 0.9902840132765585,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "choice_prefix_keys/constrained": {
+    "strategy": "constrained",
+    "keys": [
+      "Beaver Logistics",
+      "Dam Logistics",
+      "Beaver Dam Logistics",
+      "Beaver",
+      "Dam"
+    ],
+    "probabilities": [
+      9.422428506556988e-07,
+      1.6373725909927736e-07,
+      0.9999968578924224,
+      1.994728202829616e-06,
+      4.139926489149683e-08
+    ],
+    "observed_mass": 0.9999989841037827,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "choice_prefix_keys/trie": {
+    "strategy": "trie",
+    "keys": [
+      "Beaver Logistics",
+      "Dam Logistics",
+      "Beaver Dam Logistics",
+      "Beaver",
+      "Dam"
+    ],
+    "probabilities": [
+      1.5357018736884167e-07,
+      1.0129889987844701e-05,
+      0.9983927582885965,
+      0.0015868283612403302,
+      1.0129889987844701e-05
+    ],
+    "observed_mass": 0.9764191192290425,
+    "missing": [],
+    "truncated": true,
+    "n_backend_calls": 2,
+    "warnings": [
+      "trie pruned 1 subtrees below tau=0.0001: 2 labels under 1.01e-05 total mass, each assigned its subtree's mass (upper bound)"
+    ]
+  },
+  "choice_prefix_keys/echo_sum": {
+    "strategy": "echo_sum",
+    "keys": [
+      "Beaver Logistics",
+      "Dam Logistics",
+      "Beaver Dam Logistics",
+      "Beaver",
+      "Dam"
+    ],
+    "probabilities": [
+      2.0952229289832287e-07,
+      3.481280813340456e-06,
+      0.5063112228477059,
+      0.4936822108213676,
+      2.875527820253869e-06
+    ],
+    "observed_mass": 1.0,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 5,
+    "warnings": []
+  },
+  "choice_prefix_keys/echo_mean": {
+    "strategy": "echo_mean",
+    "keys": [
+      "Beaver Logistics",
+      "Dam Logistics",
+      "Beaver Dam Logistics",
+      "Beaver",
+      "Dam"
+    ],
+    "probabilities": [
+      0.00032773226035350943,
+      0.0013358989315677555,
+      0.5136629084585146,
+      0.48467063731103716,
+      2.823038527009729e-06
+    ],
+    "observed_mass": 1.0,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 5,
+    "warnings": []
+  },
+  "choice_prefix_keys/echo_pmi": {
+    "strategy": "echo_pmi",
+    "keys": [
+      "Beaver Logistics",
+      "Dam Logistics",
+      "Beaver Dam Logistics",
+      "Beaver",
+      "Dam"
+    ],
+    "probabilities": [
+      2.93894693312334e-08,
+      5.664786947978073e-05,
+      0.9466043620683448,
+      0.053314291637970086,
+      2.466903473584949e-05
+    ],
+    "observed_mass": 1.0,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 10,
+    "warnings": []
+  },
+  "choice_prefix_keys/auto": {
+    "strategy": "constrained",
+    "keys": [
+      "Beaver Logistics",
+      "Dam Logistics",
+      "Beaver Dam Logistics",
+      "Beaver",
+      "Dam"
+    ],
+    "probabilities": [
+      9.422428506556988e-07,
+      1.6373725909927736e-07,
+      0.9999968578924224,
+      1.994728202829616e-06,
+      4.139926489149683e-08
+    ],
+    "observed_mass": 0.9999989841037827,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "score_damage/first_token": {
+    "strategy": "first_token",
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "probabilities": [
+      9.313891668562564e-05,
+      9.313891668562564e-05,
+      8.219480548514932e-05,
+      0.7547123238739838,
+      0.2450192034871598
+    ],
+    "observed_mass": 0.9999758095909411,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "score_damage/constrained": {
+    "strategy": "constrained",
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "probabilities": [
+      9.313888066504875e-05,
+      9.313888066504875e-05,
+      8.219477369710178e-05,
+      0.7547123019023815,
+      0.24501922556259134
+    ],
+    "observed_mass": 1.0,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "score_damage/trie": {
+    "strategy": "trie",
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "probabilities": [
+      9.313888066504875e-05,
+      9.313888066504875e-05,
+      8.219477369710178e-05,
+      0.7547123019023815,
+      0.24501922556259134
+    ],
+    "observed_mass": 1.0,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "score_damage/echo_sum": {
+    "strategy": "echo_sum",
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "probabilities": [
+      8.219889742238711e-05,
+      0.00010866656502537476,
+      9.589790704940075e-05,
+      0.7770769652048363,
+      0.22263627142566658
+    ],
+    "observed_mass": 0.9996929306041471,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 5,
+    "warnings": []
+  },
+  "score_damage/echo_mean": {
+    "strategy": "echo_mean",
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "probabilities": [
+      0.006557250938358774,
+      0.007539399863970535,
+      0.007082610717988063,
+      0.6375596529570219,
+      0.3412610855226607
+    ],
+    "observed_mass": 0.9996929306041471,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 5,
+    "warnings": []
+  },
+  "score_damage/echo_pmi": {
+    "strategy": "echo_pmi",
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "probabilities": [
+      0.0004331752826235526,
+      0.00623483119997762,
+      0.002024152850039851,
+      0.5542078947283342,
+      0.43709994593902474
+    ],
+    "observed_mass": 0.9996929306041471,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 10,
+    "warnings": []
+  },
+  "score_damage/auto": {
+    "strategy": "constrained",
+    "keys": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "probabilities": [
+      9.313888066504875e-05,
+      9.313888066504875e-05,
+      8.219477369710178e-05,
+      0.7547123019023815,
+      0.24501922556259134
+    ],
+    "observed_mass": 1.0,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "noul_human/first_token": {
+    "strategy": "first_token",
+    "keys": [
+      "true",
+      "false"
+    ],
+    "probabilities": [
+      0.9989677740461497,
+      0.0010322259538503304
+    ],
+    "observed_mass": 0.9999904113894015,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "noul_human/constrained": {
+    "strategy": "constrained",
+    "keys": [
+      "true",
+      "false"
+    ],
+    "probabilities": [
+      0.998967774035946,
+      0.001032225964053913
+    ],
+    "observed_mass": 0.9999999382015691,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "noul_human/trie": {
+    "strategy": "trie",
+    "keys": [
+      "true",
+      "false"
+    ],
+    "probabilities": [
+      0.9989677690217064,
+      0.0010322309782936526
+    ],
+    "observed_mass": 0.999999991505182,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "noul_human/echo_sum": {
+    "strategy": "echo_sum",
+    "keys": [
+      "true",
+      "false"
+    ],
+    "probabilities": [
+      0.9990889482191432,
+      0.000911051780856885
+    ],
+    "observed_mass": 0.99998575875466,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 2,
+    "warnings": []
+  },
+  "noul_human/echo_mean": {
+    "strategy": "echo_mean",
+    "keys": [
+      "true",
+      "false"
+    ],
+    "probabilities": [
+      0.9990889482191432,
+      0.000911051780856885
+    ],
+    "observed_mass": 0.99998575875466,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 2,
+    "warnings": []
+  },
+  "noul_human/echo_pmi": {
+    "strategy": "echo_pmi",
+    "keys": [
+      "true",
+      "false"
+    ],
+    "probabilities": [
+      0.851952695271539,
+      0.1480473047284609
+    ],
+    "observed_mass": 0.99998575875466,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 4,
+    "warnings": []
+  },
+  "noul_human/auto": {
+    "strategy": "constrained",
+    "keys": [
+      "true",
+      "false"
+    ],
+    "probabilities": [
+      0.998967774035946,
+      0.001032225964053913
+    ],
+    "observed_mass": 0.9999999382015691,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 1,
+    "warnings": []
+  },
+  "choice_60_countries/trie": {
+    "strategy": "trie",
+    "keys": [
+      "Albania",
+      "Argentina",
+      "Australia",
+      "Austria",
+      "Belgium",
+      "Bolivia",
+      "Brazil",
+      "Bulgaria",
+      "Canada",
+      "Chile",
+      "China",
+      "Colombia",
+      "Croatia",
+      "Cuba",
+      "Denmark",
+      "Ecuador",
+      "Egypt",
+      "Estonia",
+      "Finland",
+      "France",
+      "Germany",
+      "Ghana",
+      "Greece",
+      "Hungary",
+      "Iceland",
+      "India",
+      "Indonesia",
+      "Iran",
+      "Iraq",
+      "Ireland",
+      "Israel",
+      "Italy",
+      "Jamaica",
+      "Japan",
+      "Kenya",
+      "Latvia",
+      "Lebanon",
+      "Libya",
+      "Malta",
+      "Mexico",
+      "Morocco",
+      "Nepal",
+      "Netherlands",
+      "Nigeria",
+      "Norway",
+      "Pakistan",
+      "Peru",
+      "Poland",
+      "Portugal",
+      "Romania",
+      "Russia",
+      "Senegal",
+      "Serbia",
+      "Spain",
+      "Sweden",
+      "Switzerland",
+      "Thailand",
+      "Turkey",
+      "Ukraine",
+      "Vietnam"
+    ],
+    "probabilities": [
+      5.710898101567735e-07,
+      8.227336618869794e-08,
+      1.4728600327188444e-05,
+      3.7239733534959827e-06,
+      0.00020332205587360495,
+      3.3963625506890543e-09,
+      7.805872203400185e-07,
+      6.40745620136784e-08,
+      3.118044713733938e-05,
+      7.26059908267341e-08,
+      5.418349257603607e-06,
+      1.0461533153666646e-08,
+      8.757954242438892e-08,
+      1.05641093302746e-07,
+      2.5341956707178283e-07,
+      2.333914056941679e-09,
+      9.604253862923075e-05,
+      1.3564571948550654e-07,
+      4.4476519135419514e-07,
+      0.9992810459797357,
+      9.604253862923075e-05,
+      2.9672387422966094e-10,
+      6.139794079429315e-06,
+      4.4476519135419514e-07,
+      3.463834793095504e-07,
+      6.079219384563377e-07,
+      2.1009220021917892e-07,
+      7.728867491929938e-08,
+      2.2364198299517745e-07,
+      1.2089971375892186e-06,
+      3.0266679976791634e-08,
+      0.00012332106068314652,
+      2.0596719261496785e-09,
+      3.463834793095504e-07,
+      5.599655180330386e-09,
+      1.415590432669425e-09,
+      8.227336618869794e-08,
+      2.214357610734714e-08,
+      2.5341956707178283e-07,
+      6.079219384563377e-07,
+      6.471295349413754e-07,
+      2.671023194653091e-08,
+      4.4476519135419514e-07,
+      3.429664159517012e-08,
+      1.3699732362214442e-06,
+      2.214357610734714e-08,
+      5.710898101567735e-07,
+      4.178182306428661e-07,
+      2.900233363839717e-06,
+      2.1009220021917892e-07,
+      2.258704014848186e-06,
+      2.1708782386801763e-10,
+      1.537067372001384e-07,
+      3.533207543960807e-05,
+      8.30930770754044e-07,
+      8.475724285665749e-05,
+      3.687232943857054e-07,
+      6.471295349413754e-07,
+      2.2364198299517745e-07,
+      7.332938314526743e-07
+    ],
+    "observed_mass": 0.9999973699750146,
+    "missing": [
+      "Bolivia",
+      "Colombia",
+      "Ecuador",
+      "Ghana",
+      "Jamaica",
+      "Kenya",
+      "Latvia",
+      "Nepal",
+      "Senegal"
+    ],
+    "truncated": false,
+    "n_backend_calls": 11,
+    "warnings": [
+      "trie node '': [' Bolivia', ' Colombia', ' Ecuador', ' Ghana', ' Jamaica', ' Kenya', ' Latvia', ' Nepal', ' Sen'] missing from the top-64: echo-scored"
+    ]
+  },
+  "choice_60_countries/echo_sum": {
+    "strategy": "echo_sum",
+    "keys": [
+      "Albania",
+      "Argentina",
+      "Australia",
+      "Austria",
+      "Belgium",
+      "Bolivia",
+      "Brazil",
+      "Bulgaria",
+      "Canada",
+      "Chile",
+      "China",
+      "Colombia",
+      "Croatia",
+      "Cuba",
+      "Denmark",
+      "Ecuador",
+      "Egypt",
+      "Estonia",
+      "Finland",
+      "France",
+      "Germany",
+      "Ghana",
+      "Greece",
+      "Hungary",
+      "Iceland",
+      "India",
+      "Indonesia",
+      "Iran",
+      "Iraq",
+      "Ireland",
+      "Israel",
+      "Italy",
+      "Jamaica",
+      "Japan",
+      "Kenya",
+      "Latvia",
+      "Lebanon",
+      "Libya",
+      "Malta",
+      "Mexico",
+      "Morocco",
+      "Nepal",
+      "Netherlands",
+      "Nigeria",
+      "Norway",
+      "Pakistan",
+      "Peru",
+      "Poland",
+      "Portugal",
+      "Romania",
+      "Russia",
+      "Senegal",
+      "Serbia",
+      "Spain",
+      "Sweden",
+      "Switzerland",
+      "Thailand",
+      "Turkey",
+      "Ukraine",
+      "Vietnam"
+    ],
+    "probabilities": [
+      6.079400195030603e-07,
+      7.261680638381839e-08,
+      1.1472365103254405e-05,
+      4.781038908091184e-06,
+      0.0002610403606345763,
+      3.614371259484272e-09,
+      8.84407487403472e-07,
+      7.727954939845058e-08,
+      4.003133954804218e-05,
+      9.321586336903259e-08,
+      5.417626842755833e-06,
+      1.2615395271193415e-08,
+      9.922739151639838e-08,
+      1.1243979412162023e-07,
+      2.871250729357358e-07,
+      2.333640183889015e-09,
+      9.602973351966231e-05,
+      1.19710487664018e-07,
+      5.039264439093906e-07,
+      0.9991523509282842,
+      0.00010881646286231698,
+      2.8755650478674573e-10,
+      6.138975476162087e-06,
+      4.733892151004733e-07,
+      3.9245344355085723e-07,
+      6.470463401418103e-07,
+      2.3803504602339617e-07,
+      7.259658738647966e-08,
+      2.2361323164178527e-07,
+      1.3697971128293828e-06,
+      2.8429232098079368e-08,
+      0.00013972310406927272,
+      1.9349398195040494e-09,
+      2.87205040621471e-07,
+      6.343419110941331e-09,
+      1.4154081221129496e-09,
+      9.321586336903259e-08,
+      2.214070822010293e-08,
+      2.8712370381996175e-07,
+      7.804868682561886e-07,
+      7.331995593942439e-07,
+      2.6706791998691915e-08,
+      5.364176989446103e-07,
+      3.8858153070090814e-08,
+      9.417090737135024e-07,
+      2.0799270521906395e-08,
+      6.470463401418103e-07,
+      4.1776451604312046e-07,
+      2.5591179185458244e-06,
+      2.2361323164178527e-07,
+      2.258413636465427e-06,
+      2.1705430253766838e-10,
+      1.741501599077498e-07,
+      4.5361450483056865e-05,
+      1.066799064120473e-06,
+      0.00010881646286231698,
+      5.710163910038461e-07,
+      8.308239465168662e-07,
+      2.871250729357358e-07,
+      8.84407487403472e-07
+    ],
+    "observed_mass": 0.9996253816296927,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 60,
+    "warnings": []
+  },
+  "choice_60_countries/auto": {
+    "strategy": "echo_sum",
+    "keys": [
+      "Albania",
+      "Argentina",
+      "Australia",
+      "Austria",
+      "Belgium",
+      "Bolivia",
+      "Brazil",
+      "Bulgaria",
+      "Canada",
+      "Chile",
+      "China",
+      "Colombia",
+      "Croatia",
+      "Cuba",
+      "Denmark",
+      "Ecuador",
+      "Egypt",
+      "Estonia",
+      "Finland",
+      "France",
+      "Germany",
+      "Ghana",
+      "Greece",
+      "Hungary",
+      "Iceland",
+      "India",
+      "Indonesia",
+      "Iran",
+      "Iraq",
+      "Ireland",
+      "Israel",
+      "Italy",
+      "Jamaica",
+      "Japan",
+      "Kenya",
+      "Latvia",
+      "Lebanon",
+      "Libya",
+      "Malta",
+      "Mexico",
+      "Morocco",
+      "Nepal",
+      "Netherlands",
+      "Nigeria",
+      "Norway",
+      "Pakistan",
+      "Peru",
+      "Poland",
+      "Portugal",
+      "Romania",
+      "Russia",
+      "Senegal",
+      "Serbia",
+      "Spain",
+      "Sweden",
+      "Switzerland",
+      "Thailand",
+      "Turkey",
+      "Ukraine",
+      "Vietnam"
+    ],
+    "probabilities": [
+      6.079400195030603e-07,
+      7.261680638381839e-08,
+      1.1472365103254405e-05,
+      4.781038908091184e-06,
+      0.0002610403606345763,
+      3.614371259484272e-09,
+      8.84407487403472e-07,
+      7.727954939845058e-08,
+      4.003133954804218e-05,
+      9.321586336903259e-08,
+      5.417626842755833e-06,
+      1.2615395271193415e-08,
+      9.922739151639838e-08,
+      1.1243979412162023e-07,
+      2.871250729357358e-07,
+      2.333640183889015e-09,
+      9.602973351966231e-05,
+      1.19710487664018e-07,
+      5.039264439093906e-07,
+      0.9991523509282842,
+      0.00010881646286231698,
+      2.8755650478674573e-10,
+      6.138975476162087e-06,
+      4.733892151004733e-07,
+      3.9245344355085723e-07,
+      6.470463401418103e-07,
+      2.3803504602339617e-07,
+      7.259658738647966e-08,
+      2.2361323164178527e-07,
+      1.3697971128293828e-06,
+      2.8429232098079368e-08,
+      0.00013972310406927272,
+      1.9349398195040494e-09,
+      2.87205040621471e-07,
+      6.343419110941331e-09,
+      1.4154081221129496e-09,
+      9.321586336903259e-08,
+      2.214070822010293e-08,
+      2.8712370381996175e-07,
+      7.804868682561886e-07,
+      7.331995593942439e-07,
+      2.6706791998691915e-08,
+      5.364176989446103e-07,
+      3.8858153070090814e-08,
+      9.417090737135024e-07,
+      2.0799270521906395e-08,
+      6.470463401418103e-07,
+      4.1776451604312046e-07,
+      2.5591179185458244e-06,
+      2.2361323164178527e-07,
+      2.258413636465427e-06,
+      2.1705430253766838e-10,
+      1.741501599077498e-07,
+      4.5361450483056865e-05,
+      1.066799064120473e-06,
+      0.00010881646286231698,
+      5.710163910038461e-07,
+      8.308239465168662e-07,
+      2.871250729357358e-07,
+      8.84407487403472e-07
+    ],
+    "observed_mass": 0.9996253816296927,
+    "missing": [],
+    "truncated": false,
+    "n_backend_calls": 60,
+    "warnings": [
+      "auto: 60 options exceed the 52 letter labels: first-token scoring cannot see every label",
+      "auto: explicit-token logprobs unavailable: S5 skipped",
+      "auto: using S4 echo"
+    ]
+  }
+}

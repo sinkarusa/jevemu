@@ -1,0 +1,33 @@
+{
+  "state": "Export to PDF fails with a spinner that never finishes. Some of our team say CSV export still works for them, others say it fails too. This is the third time I'm writing in and honestly I'm done. Steps: open any report, click Export, choose PDF. Chrome 128 on macOS.",
+  "questions": {
+    "severity": {
+      "type": "score",
+      "instructions": "How severe is the reported issue?",
+      "criteria": [
+        "Cosmetic; no impact to functionality",
+        "Broken or degraded feature, but workaround exists",
+        "Blocking issue; no workaround exists"
+      ]
+    },
+    "frustration": {
+      "type": "score",
+      "instructions": "How frustrated is the customer?",
+      "criteria": [
+        "Calm, just stating facts",
+        "Frustrated but civil",
+        "Very angry, strong language or threatening to leave"
+      ]
+    },
+    "report_quality": {
+      "type": "score",
+      "instructions": "How much does the report give an engineer to work with?",
+      "criteria": [
+        "No detail; just says something is broken",
+        "Names the feature but no steps or environment",
+        "Steps to reproduce or environment, but not both",
+        "Steps to reproduce and environment"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "model": "jev-1.13.0",
+  "answers": {
+    "return_topic": {
+      "type": "choice",
+      "choice": "return_status",
+      "confidence": 1.0,
+      "probabilities": {
+        "return_policy": 0.0,
+        "return_status": 1.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 407,
+    "output_tokens": 32
+  }
+}

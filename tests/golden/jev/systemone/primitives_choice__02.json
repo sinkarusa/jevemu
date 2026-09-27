@@ -1,0 +1,133 @@
+{
+ "meta": {
+  "recorded_at": "2026-09-24T23:24:26+00:00",
+  "base_url": "https://api.typesafe.ai",
+  "jevemu_version": "0.0.1",
+  "source": "tests/golden/fixtures/jev_docs/primitives_choice__02__request.json",
+  "model": "jev-1.13.0",
+  "request_id": "req_01a0d5bc0e8f7a84b226942db8516d18",
+  "latency_ms": 335.3,
+  "input_tokens": 750,
+  "cost_usd": 3.150000000000001e-05
+ },
+ "request": {
+  "state": "Shoes arrived two weeks late and in the wrong size. Also I see two charges of $120 on my card. What are you going to do about this?",
+  "model": "jev-1.13.0",
+  "questions": {
+   "department": {
+    "type": "choice",
+    "instructions": "Which team should handle this?",
+    "criteria": {
+     "returns": "Exchanges, wrong or damaged items",
+     "shipping": "Delivery status, delays, lost packages",
+     "billing": "Charges, invoices, payment problems"
+    }
+   },
+   "return_reason": {
+    "type": "choice",
+    "instructions": "If the customer wants to return something, why?",
+    "criteria": {
+     "wrong_size": "The item doesn't fit",
+     "wrong_item": "A different product was delivered",
+     "damaged": "The item arrived broken or faulty",
+     "changed_mind": "The item is fine, the customer no longer wants it",
+     "other": "A return reason that fits none of the above"
+    }
+   },
+   "shipping_issue": {
+    "type": "choice",
+    "instructions": "If this is a shipping problem, which kind is it?",
+    "criteria": {
+     "not_delivered": "The package never arrived",
+     "delayed": "The package is late but still on its way",
+     "wrong_address": "The package went to the wrong place",
+     "damaged_in_transit": "The package arrived damaged",
+     "other": "A shipping problem that fits none of the above"
+    }
+   },
+   "requested_resolution": {
+    "type": "choice",
+    "instructions": "What does the customer want to happen?",
+    "criteria": {
+     "exchange": "Swap the item for a different one",
+     "refund": "Money back",
+     "replacement": "The same item sent again",
+     "information": "Just an answer, no action needed"
+    }
+   },
+   "tone": {
+    "type": "choice",
+    "instructions": "What is the customer's tone?",
+    "criteria": {
+     "calm": null,
+     "frustrated": null,
+     "angry": null
+    }
+   }
+  }
+ },
+ "response": {
+  "model": "jev-1.13.0",
+  "answers": {
+   "department": {
+    "type": "choice",
+    "choice": "returns",
+    "confidence": 0.41,
+    "probabilities": {
+     "shipping": 0.04,
+     "returns": 0.61,
+     "billing": 0.35
+    }
+   },
+   "return_reason": {
+    "type": "choice",
+    "choice": "wrong_size",
+    "confidence": 1.0,
+    "probabilities": {
+     "wrong_size": 1.0,
+     "wrong_item": 0.0,
+     "other": 0.0,
+     "changed_mind": 0.0,
+     "damaged": 0.0
+    }
+   },
+   "shipping_issue": {
+    "type": "choice",
+    "choice": "delayed",
+    "confidence": 0.65,
+    "probabilities": {
+     "delayed": 0.73,
+     "other": 0.27,
+     "wrong_address": 0.0,
+     "damaged_in_transit": 0.0,
+     "not_delivered": 0.0
+    }
+   },
+   "requested_resolution": {
+    "type": "choice",
+    "choice": "refund",
+    "confidence": 0.28,
+    "probabilities": {
+     "refund": 0.46,
+     "information": 0.02,
+     "exchange": 0.2,
+     "replacement": 0.32
+    }
+   },
+   "tone": {
+    "type": "choice",
+    "choice": "frustrated",
+    "confidence": 0.77,
+    "probabilities": {
+     "calm": 0.0,
+     "angry": 0.15,
+     "frustrated": 0.85
+    }
+   }
+  },
+  "usage": {
+   "input_tokens": 750,
+   "output_tokens": 237
+  }
+ }
+}

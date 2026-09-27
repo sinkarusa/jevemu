@@ -1,0 +1,439 @@
+{
+  "api__01": {
+    "model": "jevemu/Qwen/Qwen3-0.6B",
+    "answers": {
+      "is_urgent": {
+        "type": "noul",
+        "noul": 0.9875683968495387
+      }
+    },
+    "usage": {
+      "input_tokens": 42,
+      "output_tokens": 1
+    },
+    "x_jevemu": {
+      "is_urgent": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "yes_no",
+        "permutations": 1,
+        "observed_mass": 1.0,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "true": 0.9875683968495387,
+          "false": 0.01243160315046145
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 0,
+        "warnings": []
+      }
+    }
+  },
+  "api__02": {
+    "model": "jevemu/Qwen/Qwen3-0.6B",
+    "answers": {
+      "is_urgent": {
+        "type": "noul",
+        "noul": 0.9149012910858534
+      }
+    },
+    "usage": {
+      "input_tokens": 57,
+      "output_tokens": 1
+    },
+    "x_jevemu": {
+      "is_urgent": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "yes_no",
+        "permutations": 1,
+        "observed_mass": 0.9999997864653674,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "true": 0.9149012910858534,
+          "false": 0.08509870891414664
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 16,
+        "warnings": []
+      }
+    }
+  },
+  "api__03": {
+    "model": "jevemu/Qwen/Qwen3-0.6B",
+    "answers": {
+      "department": {
+        "type": "choice",
+        "choice": "billing",
+        "probabilities": {
+          "billing": 0.9324321747905513,
+          "technical": 0.06754516632506949,
+          "sales": 2.2658884379245874e-05
+        },
+        "confidence": 0.8986482621858269
+      }
+    },
+    "usage": {
+      "input_tokens": 78,
+      "output_tokens": 1
+    },
+    "x_jevemu": {
+      "department": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "letters",
+        "permutations": 1,
+        "observed_mass": 0.9999998508191343,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "billing": 0.9324321747905513,
+          "technical": 0.06754516632506949,
+          "sales": 2.2658884379245874e-05
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 16,
+        "warnings": []
+      }
+    }
+  },
+  "api__04": {
+    "model": "jevemu/Qwen/Qwen3-0.6B",
+    "answers": {
+      "frustration": {
+        "type": "score",
+        "score": 1.0014961787613255,
+        "legend": {
+          "0": "Calm",
+          "1": "Frustrated",
+          "2": "Very angry"
+        },
+        "probabilities": {
+          "0": 0.0004297278507928867,
+          "1": 0.9976443655370888,
+          "2": 0.001925906612118347
+        },
+        "confidence": 0.9964665483056332
+      }
+    },
+    "usage": {
+      "input_tokens": 62,
+      "output_tokens": 1
+    },
+    "x_jevemu": {
+      "frustration": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "digits",
+        "permutations": 1,
+        "observed_mass": 1.0,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "0": 0.0004297278507928867,
+          "1": 0.9976443655370888,
+          "2": 0.001925906612118347
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 16,
+        "warnings": []
+      }
+    }
+  },
+  "introduction_quickstart__02": {
+    "model": "jevemu/Qwen/Qwen3-0.6B",
+    "answers": {
+      "department": {
+        "type": "choice",
+        "choice": "technical",
+        "probabilities": {
+          "billing": 4.785076659336882e-06,
+          "technical": 0.9999914883018901,
+          "sales": 3.7266214505708783e-06
+        },
+        "confidence": 0.9999872324528352
+      },
+      "frustration": {
+        "type": "score",
+        "score": 1.17178289621113,
+        "legend": {
+          "0": "Calm, just stating facts",
+          "1": "Frustrated but civil",
+          "2": "Very angry, strong language"
+        },
+        "probabilities": {
+          "0": 0.00900068223389966,
+          "1": 0.8102157393210707,
+          "2": 0.18078357844502962
+        },
+        "confidence": 0.7153236089816061
+      },
+      "is_urgent": {
+        "type": "noul",
+        "noul": 0.9959298773641705
+      }
+    },
+    "usage": {
+      "input_tokens": 243,
+      "output_tokens": 3
+    },
+    "x_jevemu": {
+      "department": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "letters",
+        "permutations": 1,
+        "observed_mass": 0.9999999296754901,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "billing": 4.785076659336882e-06,
+          "technical": 0.9999914883018901,
+          "sales": 3.7266214505708783e-06
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 0,
+        "warnings": []
+      },
+      "frustration": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "digits",
+        "permutations": 1,
+        "observed_mass": 0.9999999599563515,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "0": 0.00900068223389966,
+          "1": 0.8102157393210707,
+          "2": 0.18078357844502962
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 32,
+        "warnings": []
+      },
+      "is_urgent": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "yes_no",
+        "permutations": 1,
+        "observed_mass": 1.0,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "true": 0.9959298773641705,
+          "false": 0.0040701226358295746
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 32,
+        "warnings": []
+      }
+    }
+  },
+  "primitives_advanced__01": {
+    "model": "jevemu/Qwen/Qwen3-0.6B",
+    "answers": {
+      "invoice_number_is_correct": {
+        "type": "noul",
+        "noul": 0.9989677743990467
+      },
+      "customer_name": {
+        "type": "choice",
+        "choice": "Beaver Dam Logistics",
+        "probabilities": {
+          "Beaver Logistics": 2.561269031075932e-06,
+          "Dam Logistics": 1.2098578516491493e-06,
+          "Beaver Dam Logistics": 0.9999925473550505,
+          "Beaver": 3.288734703995955e-06,
+          "Dam": 3.9278336269450695e-07
+        },
+        "confidence": 0.9999906841938131
+      },
+      "amount_due": {
+        "type": "score",
+        "score": 1.0071541954564727,
+        "legend": {
+          "0": "Under $1,000",
+          "1": "$1,000 to $10,000",
+          "2": "$10,000 to $100,000",
+          "3": "$100,000 to $1,000,000",
+          "4": "Over $1,000,000"
+        },
+        "probabilities": {
+          "0": 0.08023033456138311,
+          "1": 0.8625573333803224,
+          "2": 0.03789812656201883,
+          "3": 0.008456213032990188,
+          "4": 0.010857992463285535
+        },
+        "confidence": 0.8603209461839676
+      },
+      "payment_terms": {
+        "type": "score",
+        "score": 2.999333853280763,
+        "legend": {
+          "0": "Due on receipt",
+          "1": "Net 10",
+          "2": "Net 30",
+          "3": "Net 60",
+          "4": "Net 90"
+        },
+        "probabilities": {
+          "0": 8.477538285909949e-05,
+          "1": 2.428855384479114e-05,
+          "2": 0.000379936725625359,
+          "3": 0.999494306075016,
+          "4": 1.66932626548622e-05
+        },
+        "confidence": 0.9994170556295441
+      }
+    },
+    "usage": {
+      "input_tokens": 693,
+      "output_tokens": 4
+    },
+    "x_jevemu": {
+      "invoice_number_is_correct": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "yes_no",
+        "permutations": 1,
+        "observed_mass": 0.9999999222744865,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "true": 0.9989677743990467,
+          "false": 0.0010322256009533918
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 0,
+        "warnings": []
+      },
+      "customer_name": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "letters",
+        "permutations": 1,
+        "observed_mass": 0.9999991302168965,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "Beaver Logistics": 2.561269031075932e-06,
+          "Dam Logistics": 1.2098578516491493e-06,
+          "Beaver Dam Logistics": 0.9999925473550505,
+          "Beaver": 3.288734703995955e-06,
+          "Dam": 3.9278336269450695e-07
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 48,
+        "warnings": []
+      },
+      "amount_due": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "digits",
+        "permutations": 1,
+        "observed_mass": 0.9999999862970298,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "0": 0.08023033456138311,
+          "1": 0.8625573333803224,
+          "2": 0.03789812656201883,
+          "3": 0.008456213032990188,
+          "4": 0.010857992463285535
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 48,
+        "warnings": []
+      },
+      "payment_terms": {
+        "backend": "vllm_http",
+        "backend_model": "Qwen/Qwen3-0.6B",
+        "vllm_version": "0.30.0",
+        "strategy": "constrained",
+        "label_scheme": "digits",
+        "permutations": 1,
+        "observed_mass": 0.9999999063957874,
+        "missing_labels": [],
+        "raw_probabilities": {
+          "0": 8.477538285909949e-05,
+          "1": 2.428855384479114e-05,
+          "2": 0.000379936725625359,
+          "3": 0.999494306075016,
+          "4": 1.66932626548622e-05
+        },
+        "debiaser": null,
+        "debias_calls": 0,
+        "debias_prior": null,
+        "permutation_scores": [],
+        "calibrator": null,
+        "n_backend_calls": 1,
+        "cached_tokens": 48,
+        "warnings": []
+      }
+    }
+  }
+}

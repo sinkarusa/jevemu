@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "fixture_schema_version": 1,
+    "vllm_version": "0.30.0",
+    "model": "Qwen/Qwen3-0.6B",
+    "model_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "image": "vllm/vllm-openai:v0.30.0@sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90",
+    "recorded_at": "2026-09-27T07:00:25+00:00"
+  },
+  "call": {
+    "method": "health",
+    "capabilities": {
+      "top_logprobs_max": 64
+    }
+  },
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/version",
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "version": "0.30.0"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/models",
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "object": "list",
+          "data": [
+            {
+              "id": "Qwen/Qwen3-0.6B",
+              "object": "model",
+              "created": 1790492424,
+              "owned_by": "vllm",
+              "root": "Qwen/Qwen3-0.6B",
+              "parent": null,
+              "max_model_len": 8192,
+              "permission": [
+                {
+                  "id": "modelperm-b9d4104a607f01c8",
+                  "object": "model_permission",
+                  "created": 1790492424,
+                  "allow_create_engine": false,
+                  "allow_sampling": true,
+                  "allow_logprobs": true,
+                  "allow_search_indices": false,
+                  "allow_view": true,
+                  "allow_fine_tuning": false,
+                  "organization": "*",
+                  "group": null,
+                  "is_blocking": false
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/metrics",
+        "json": null
+      },
+      "response": {
+        "status": 200,
+        "text": "# HELP vllm:cache_config_info Information of the LLMEngine CacheConfig\n# TYPE vllm:cache_config_info gauge\nvllm:cache_config_info{_block_size_resolved=\"True\",block_size=\"16\",cache_dtype=\"auto\",enable_mamba_fine_grained_prefix_cache=\"False\",enable_prefix_caching=\"True\",engine=\"0\",gpu_memory_utilization=\"0.85\",is_attention_free=\"False\",kv_cache_dtype_skip_layers=\"[]\",kv_cache_layout=\"None\",kv_cache_max_concurrency=\"20.236328125\",kv_cache_memory_bytes=\"None\",kv_cache_size_tokens=\"165776\",kv_offloading_backend=\"native\",kv_offloading_size=\"None\",kv_sharing_fast_prefill=\"False\",mamba_block_size=\"None\",mamba_cache_dtype=\"auto\",mamba_cache_mode=\"none\",mamba_page_size_padded=\"None\",mamba_ssm_cache_dtype=\"auto\",num_cpu_blocks=\"None\",num_gpu_blocks=\"10361\",num_gpu_blocks_override=\"None\",prefix_cache_retention_interval=\"0\",prefix_caching_hash_algo=\"sha256\",prefix_match_unit=\"None\",replayssm_buffer_len=\"16\",skip_page_size_padded=\"None\",sliding_window=\"None\",use_kda_recoverssm=\"False\",use_replayssm=\"False\",user_specified_block_size=\"False\",user_specified_mamba_block_size=\"False\"} 1.0\n"
+      }
+    }
+  ]
+}

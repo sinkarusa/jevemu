@@ -1,0 +1,17 @@
+template_id: question_first-6f75027397a3
+<<< system >>>
+Read the state in the next message, then answer.
+
+Question:
+Has the customer contacted support about this before?
+
+Criteria:
+Yes: Mentions a prior attempt, ticket, or that they have asked before
+No: No sign of any previous contact
+
+Respond with Yes or No only.
+<<< user >>>
+State:
+I have asked three times now. Can I please just talk to a real person?
+<<< assistant >>>
+Answer:

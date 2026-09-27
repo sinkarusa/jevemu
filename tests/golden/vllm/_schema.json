@@ -1,0 +1,1059 @@
+{
+ "detokenize": [
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  }
+ ],
+ "echo_sequence_logprobs": [
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/v1/completions"
+   ],
+   "response": {
+    "choices": [
+     {
+      "finish_reason": "str",
+      "index": "number",
+      "logprobs": {
+       "text_offset": [
+        "number"
+       ],
+       "token_logprobs": [
+        "null",
+        "number"
+       ],
+       "tokens": [
+        "str"
+       ],
+       "top_logprobs": [
+        "null",
+        {
+         " **": "number",
+         " Paris": "number"
+        },
+        {
+         " France": "number",
+         " the": "number"
+        },
+        {
+         " France": "number"
+        },
+        {
+         " The": "number",
+         "<|im_end|>": "number"
+        },
+        {
+         " capital": "number",
+         " value": "number"
+        },
+        {
+         " capital": "number"
+        },
+        {
+         " is": "number"
+        },
+        {
+         " of": "number"
+        },
+        {
+         " the": "number"
+        },
+        {
+         "</think>": "number"
+        },
+        {
+         "<think>": "number"
+        },
+        {
+         "<|im_start|>": "number"
+        },
+        {
+         "?": "number",
+         "?\n": "number"
+        },
+        {
+         "Question": "number",
+         "user": "number"
+        },
+        {
+         "The": "number"
+        },
+        {
+         "What": "number",
+         "what": "number"
+        },
+        {
+         "\n": "number",
+         ":\n": "number"
+        },
+        {
+         "\n": "number",
+         "\n\n": "number"
+        },
+        {
+         "\n": "number",
+         "assistant": "number"
+        },
+        {
+         "\n": "number"
+        },
+        {
+         "\n\n": "number"
+        }
+       ]
+      },
+      "prompt_logprobs": [
+       "null",
+       {
+        "<token_id>": [
+         {
+          "decoded_token": "str",
+          "logprob": "number",
+          "rank": "number"
+         }
+        ]
+       }
+      ],
+      "prompt_token_ids": "null",
+      "routed_experts": "null",
+      "stop_reason": "null",
+      "text": "str",
+      "token_ids": "null"
+     }
+    ],
+    "created": "number",
+    "ec_transfer_params": "null",
+    "id": "str",
+    "kv_transfer_params": "null",
+    "metrics": "null",
+    "model": "str",
+    "object": "str",
+    "service_tier": "null",
+    "system_fingerprint": "str",
+    "usage": {
+     "completion_tokens": "number",
+     "completion_tokens_details": "null",
+     "prompt_tokens": "number",
+     "prompt_tokens_details": {
+      "cached_tokens": "number",
+      "created_cache_tokens": "null",
+      "multimodal_tokens": "null"
+     },
+     "total_tokens": "number"
+    }
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/v1/completions"
+   ],
+   "response": {
+    "choices": [
+     {
+      "finish_reason": "str",
+      "index": "number",
+      "logprobs": {
+       "text_offset": [
+        "number"
+       ],
+       "token_logprobs": [
+        "null",
+        "number"
+       ],
+       "tokens": [
+        "str"
+       ],
+       "top_logprobs": [
+        "null",
+        {
+         " **": "number",
+         " London": "number"
+        },
+        {
+         " France": "number",
+         " the": "number"
+        },
+        {
+         " France": "number"
+        },
+        {
+         " The": "number",
+         "<|im_end|>": "number"
+        },
+        {
+         " capital": "number",
+         " value": "number"
+        },
+        {
+         " capital": "number"
+        },
+        {
+         " is": "number"
+        },
+        {
+         " of": "number"
+        },
+        {
+         " the": "number"
+        },
+        {
+         "</think>": "number"
+        },
+        {
+         "<think>": "number"
+        },
+        {
+         "<|im_start|>": "number"
+        },
+        {
+         "?": "number",
+         "?\n": "number"
+        },
+        {
+         "Question": "number",
+         "user": "number"
+        },
+        {
+         "The": "number"
+        },
+        {
+         "What": "number",
+         "what": "number"
+        },
+        {
+         "\n": "number",
+         ":\n": "number"
+        },
+        {
+         "\n": "number",
+         "\n\n": "number"
+        },
+        {
+         "\n": "number",
+         "assistant": "number"
+        },
+        {
+         "\n": "number"
+        },
+        {
+         "\n\n": "number"
+        }
+       ]
+      },
+      "prompt_logprobs": [
+       "null",
+       {
+        "<token_id>": [
+         {
+          "decoded_token": "str",
+          "logprob": "number",
+          "rank": "number"
+         }
+        ]
+       }
+      ],
+      "prompt_token_ids": "null",
+      "routed_experts": "null",
+      "stop_reason": "null",
+      "text": "str",
+      "token_ids": "null"
+     }
+    ],
+    "created": "number",
+    "ec_transfer_params": "null",
+    "id": "str",
+    "kv_transfer_params": "null",
+    "metrics": "null",
+    "model": "str",
+    "object": "str",
+    "service_tier": "null",
+    "system_fingerprint": "str",
+    "usage": {
+     "completion_tokens": "number",
+     "completion_tokens_details": "null",
+     "prompt_tokens": "number",
+     "prompt_tokens_details": {
+      "cached_tokens": "number",
+      "created_cache_tokens": "null",
+      "multimodal_tokens": "null"
+     },
+     "total_tokens": "number"
+    }
+   },
+   "status": 200
+  }
+ ],
+ "first_token": [
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/v1/completions"
+   ],
+   "response": {
+    "choices": [
+     {
+      "finish_reason": "str",
+      "index": "number",
+      "logprobs": {
+       "text_offset": [
+        "number"
+       ],
+       "token_logprobs": [
+        "number"
+       ],
+       "tokens": [
+        "str"
+       ],
+       "top_logprobs": [
+        {
+         "<token_id>": [
+          "number"
+         ]
+        }
+       ]
+      },
+      "prompt_logprobs": "null",
+      "prompt_token_ids": "null",
+      "routed_experts": "null",
+      "stop_reason": "null",
+      "text": "str",
+      "token_ids": "null"
+     }
+    ],
+    "created": "number",
+    "ec_transfer_params": "null",
+    "id": "str",
+    "kv_transfer_params": "null",
+    "metrics": "null",
+    "model": "str",
+    "object": "str",
+    "service_tier": "null",
+    "system_fingerprint": "str",
+    "usage": {
+     "completion_tokens": "number",
+     "completion_tokens_details": "null",
+     "prompt_tokens": "number",
+     "prompt_tokens_details": {
+      "cached_tokens": "number",
+      "created_cache_tokens": "null",
+      "multimodal_tokens": "null"
+     },
+     "total_tokens": "number"
+    }
+   },
+   "status": 200
+  }
+ ],
+ "first_token_constrained": [
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/detokenize"
+   ],
+   "response": {
+    "prompt": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/v1/completions"
+   ],
+   "response": {
+    "choices": [
+     {
+      "finish_reason": "str",
+      "index": "number",
+      "logprobs": {
+       "text_offset": [
+        "number"
+       ],
+       "token_logprobs": [
+        "number"
+       ],
+       "tokens": [
+        "str"
+       ],
+       "top_logprobs": [
+        {
+         "<token_id>": [
+          "number"
+         ]
+        }
+       ]
+      },
+      "prompt_logprobs": "null",
+      "prompt_token_ids": "null",
+      "routed_experts": "null",
+      "stop_reason": "null",
+      "text": "str",
+      "token_ids": "null"
+     }
+    ],
+    "created": "number",
+    "ec_transfer_params": "null",
+    "id": "str",
+    "kv_transfer_params": "null",
+    "metrics": "null",
+    "model": "str",
+    "object": "str",
+    "service_tier": "null",
+    "system_fingerprint": "str",
+    "usage": {
+     "completion_tokens": "number",
+     "completion_tokens_details": "null",
+     "prompt_tokens": "number",
+     "prompt_tokens_details": {
+      "cached_tokens": "number",
+      "created_cache_tokens": "null",
+      "multimodal_tokens": "null"
+     },
+     "total_tokens": "number"
+    }
+   },
+   "status": 200
+  }
+ ],
+ "health": [
+  {
+   "request": [
+    "GET",
+    "/metrics"
+   ],
+   "response": "str",
+   "status": 200
+  },
+  {
+   "request": [
+    "GET",
+    "/v1/models"
+   ],
+   "response": {
+    "data": [
+     {
+      "created": "number",
+      "id": "str",
+      "max_model_len": "number",
+      "object": "str",
+      "owned_by": "str",
+      "parent": "null",
+      "permission": [
+       {
+        "allow_create_engine": "bool",
+        "allow_fine_tuning": "bool",
+        "allow_logprobs": "bool",
+        "allow_sampling": "bool",
+        "allow_search_indices": "bool",
+        "allow_view": "bool",
+        "created": "number",
+        "group": "null",
+        "id": "str",
+        "is_blocking": "bool",
+        "object": "str",
+        "organization": "str"
+       }
+      ],
+      "root": "str"
+     }
+    ],
+    "object": "str"
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "GET",
+    "/version"
+   ],
+   "response": {
+    "version": "str"
+   },
+   "status": 200
+  }
+ ],
+ "tokenize": [
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  }
+ ],
+ "top_logprobs_above_cap_error": [
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/tokenize"
+   ],
+   "response": {
+    "count": "number",
+    "max_model_len": "number",
+    "token_strs": "null",
+    "tokens": [
+     "number"
+    ]
+   },
+   "status": 200
+  },
+  {
+   "request": [
+    "POST",
+    "/v1/completions"
+   ],
+   "response": {
+    "error": {
+     "code": "number",
+     "message": "str",
+     "param": "str",
+     "type": "str"
+    }
+   },
+   "status": 400
+  }
+ ]
+}

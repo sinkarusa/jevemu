@@ -1,0 +1,23 @@
+template_id: question_first-6f75027397a3
+<<< system >>>
+Read the state in the next message, then answer.
+
+Levels:
+0) No damage
+1)
+2) {
+  "what": "Item unusable",
+  "examples": [
+    "shattered"
+  ]
+}
+
+Respond with the digit only.
+<<< user >>>
+State:
+[
+  "Order 1182 arrived two days late.",
+  "The box was crushed; the mug inside is fine."
+]
+<<< assistant >>>
+Answer:

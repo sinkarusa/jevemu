@@ -1,0 +1,30 @@
+{
+ "response": [
+  "answers",
+  "model",
+  "usage"
+ ],
+ "usage": [
+  "input_tokens",
+  "output_tokens"
+ ],
+ "answers": {
+  "choice": [
+   "choice",
+   "confidence",
+   "probabilities",
+   "type"
+  ],
+  "noul": [
+   "noul",
+   "type"
+  ],
+  "score": [
+   "confidence",
+   "legend",
+   "probabilities",
+   "score",
+   "type"
+  ]
+ }
+}

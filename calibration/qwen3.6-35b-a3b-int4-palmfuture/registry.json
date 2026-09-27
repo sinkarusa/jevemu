@@ -1,0 +1,136 @@
+{
+  "format": "jevemu.calibrator_registry",
+  "version": 1,
+  "calibrators": [
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:10:4a0bcc85ad6db29b",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.4019178609139626
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:150:6ad22f70c3e44a2a",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.0561245470271907
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:4:503f248273fbb6c6",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.241040004116183
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:4:cf9e907ab30ae267",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.9905674637252917
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:5:62106b9c5cb2462d",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.13310963723844
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:6:0222984747bf3fc7",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.2442944143765577
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:77:0a3f622029033ef1",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.3440840927709534
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:7:a36a5b1975aa25c0",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.0909519395489875
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:8:35ffc55969463aa9",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.1979334095475356
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:9:926eb22cfa3771fa",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.4955507368396397
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "noul:2:da39667d142647f1",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.4154473951263302
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "score:5:6276777a0d628fc5",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.9489220406388092
+      }
+    }
+  ],
+  "fallbacks": [
+    {
+      "model": "palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4",
+      "template_id": "state_first-5d29289f8b87",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.3247921758595256
+      }
+    }
+  ]
+}

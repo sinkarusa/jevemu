@@ -1,0 +1,62 @@
+{
+ "meta": {
+  "recorded_at": "2026-09-24T23:24:26+00:00",
+  "base_url": "https://api.typesafe.ai",
+  "jevemu_version": "0.0.1",
+  "source": "tests/golden/fixtures/jev_docs/primitives_choice__03__request.json",
+  "model": "jev-1.13.0",
+  "request_id": "req_01a0d5bc0eb1746aa59fa10f4469ffb8",
+  "latency_ms": 298.5,
+  "input_tokens": 459,
+  "cost_usd": 1.9278000000000004e-05
+ },
+ "request": {
+  "state": "I sent the shoes back a week ago. When do I get my money?",
+  "model": "jev-1.13.0",
+  "questions": {
+   "return_topic": {
+    "type": "choice",
+    "instructions": {
+     "question": "Which returns topic is the customer asking about?",
+     "focus": "Classify the information the customer wants."
+    },
+    "criteria": {
+     "return_policy": {
+      "what": "Whether and how an item can be returned",
+      "not_for": "Progress of a return already sent",
+      "examples": [
+       "Can I return shoes I've worn once?",
+       "How long do I have to return an order?"
+      ]
+     },
+     "return_status": {
+      "what": "Progress of a return already sent",
+      "not_for": "Whether and how an item can be returned",
+      "examples": [
+       "Has my return arrived yet?",
+       "When will my refund be paid?"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "response": {
+  "model": "jev-1.13.0",
+  "answers": {
+   "return_topic": {
+    "type": "choice",
+    "choice": "return_status",
+    "confidence": 1.0,
+    "probabilities": {
+     "return_status": 1.0,
+     "return_policy": 0.0
+    }
+   }
+  },
+  "usage": {
+   "input_tokens": 459,
+   "output_tokens": 35
+  }
+ }
+}

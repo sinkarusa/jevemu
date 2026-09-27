@@ -1,0 +1,36 @@
+{
+ "_source": {
+  "repo_id": "fancyzhx/ag_news",
+  "filename": "data/test-00000-of-00001.parquet",
+  "revision": "eb185aade064a813bc0b7f42de02595523103ca4",
+  "sha256": "71de87ec66bc5737752a2502204dfa6d7fe9856ade3ea444dc6317789a4f13fb",
+  "license": "unknown on the Hub card; the source AG's corpus is provided for research and other non-commercial use (https://huggingface.co/datasets/fancyzhx/ag_news)",
+  "rows": "first 5 rows in file order"
+ },
+ "format": "parquet",
+ "schema_metadata": {
+  "huggingface": "{\"info\": {\"features\": {\"text\": {\"dtype\": \"string\", \"_type\": \"Value\"}, \"label\": {\"names\": [\"World\", \"Sports\", \"Business\", \"Sci/Tech\"], \"_type\": \"ClassLabel\"}}}}"
+ },
+ "rows": [
+  {
+   "text": "Fears for T N pension after talks Unions representing workers at Turner   Newall say they are 'disappointed' after talks with stricken parent firm Federal Mogul.",
+   "label": 2
+  },
+  {
+   "text": "The Race is On: Second Private Team Sets Launch Date for Human Spaceflight (SPACE.com) SPACE.com - TORONTO, Canada -- A second\\team of rocketeers competing for the  #36;10 million Ansari X Prize, a contest for\\privately funded suborbital space flight, has officially announced the first\\launch date for its manned rocket.",
+   "label": 3
+  },
+  {
+   "text": "Ky. Company Wins Grant to Study Peptides (AP) AP - A company founded by a chemistry researcher at the University of Louisville won a grant to develop a method of producing better peptides, which are short chains of amino acids, the building blocks of proteins.",
+   "label": 3
+  },
+  {
+   "text": "Prediction Unit Helps Forecast Wildfires (AP) AP - It's barely dawn when Mike Fitzpatrick starts his shift with a blur of colorful maps, figures and endless charts, but already he knows what the day will bring. Lightning will strike in places he expects. Winds will pick up, moist places will dry and flames will roar.",
+   "label": 3
+  },
+  {
+   "text": "Calif. Aims to Limit Farm-Related Smog (AP) AP - Southern California's smog-fighting agency went after emissions of the bovine variety Friday, adopting the nation's first rules to reduce air pollution from dairy cow manure.",
+   "label": 3
+  }
+ ]
+}

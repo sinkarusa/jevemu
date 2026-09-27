@@ -1,0 +1,86 @@
+{
+ "meta": {
+  "recorded_at": "2026-09-24T23:24:26+00:00",
+  "base_url": "https://api.typesafe.ai",
+  "jevemu_version": "0.0.1",
+  "source": "tests/golden/fixtures/jev_docs/primitives_score__03__request.json",
+  "model": "jev-1.13.0",
+  "request_id": "req_01a0d5bc0e37794c81c7d82a9205e90c",
+  "latency_ms": 140.6,
+  "input_tokens": 419,
+  "cost_usd": 1.7598000000000003e-05
+ },
+ "request": {
+  "state": "Export to PDF fails with a spinner that never finishes. Some of our team say CSV export still works for them, others say it fails too.",
+  "model": "jev-1.13.0",
+  "questions": {
+   "bug_severity": {
+    "type": "score",
+    "instructions": "How severe is the reported issue?",
+    "criteria": [
+     {
+      "what": "Cosmetic; no impact to functionality",
+      "examples": [
+       "typo in a label",
+       "misaligned icon"
+      ]
+     },
+     {
+      "what": "Broken or degraded feature, but workaround exists",
+      "examples": [
+       "export fails in one browser but works in another"
+      ]
+     },
+     {
+      "what": "Blocking issue; no workaround exists",
+      "examples": [
+       "cannot log in",
+       "data loss"
+      ]
+     }
+    ]
+   }
+  }
+ },
+ "response": {
+  "model": "jev-1.13.0",
+  "answers": {
+   "bug_severity": {
+    "type": "score",
+    "score": 1.09,
+    "confidence": 0.86,
+    "legend": {
+     "0": {
+      "what": "Cosmetic; no impact to functionality",
+      "examples": [
+       "typo in a label",
+       "misaligned icon"
+      ]
+     },
+     "1": {
+      "what": "Broken or degraded feature, but workaround exists",
+      "examples": [
+       "export fails in one browser but works in another"
+      ]
+     },
+     "2": {
+      "what": "Blocking issue; no workaround exists",
+      "examples": [
+       "cannot log in",
+       "data loss"
+      ]
+     }
+    },
+    "probabilities": {
+     "0": 0.0,
+     "1": 0.91,
+     "2": 0.09
+    }
+   }
+  },
+  "usage": {
+   "input_tokens": 419,
+   "output_tokens": 20
+  }
+ }
+}

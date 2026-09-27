@@ -1,0 +1,16 @@
+template_id: state_first-5d29289f8b87
+<<< user >>>
+State:
+My running shoes arrived in the wrong size. Can I swap them for a size 10?
+
+Question:
+Which team should handle this?
+
+Options:
+A) returns: Exchanges, wrong or damaged items
+B) shipping: Delivery status, delays, lost packages
+C) billing: Charges, invoices, payment problems
+
+Respond with the letter only.
+<<< assistant >>>
+Answer:

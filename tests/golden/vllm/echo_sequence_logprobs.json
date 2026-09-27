@@ -1,0 +1,1089 @@
+{
+  "meta": {
+    "fixture_schema_version": 1,
+    "vllm_version": "0.30.0",
+    "model": "Qwen/Qwen3-0.6B",
+    "model_revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "image": "vllm/vllm-openai:v0.30.0@sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90",
+    "recorded_at": "2026-09-27T07:00:25+00:00"
+  },
+  "call": {
+    "method": "sequence_logprobs",
+    "prompt": {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the capital of France?"
+        },
+        {
+          "role": "assistant",
+          "content": "The capital of France is"
+        }
+      ],
+      "template_id": "golden/prefill"
+    },
+    "continuations": [
+      " Paris",
+      " London"
+    ],
+    "capabilities": {}
+  },
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/tokenize",
+        "json": {
+          "model": "Qwen/Qwen3-0.6B",
+          "prompt": "The capital of France is",
+          "add_special_tokens": false
+        }
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "count": 5,
+          "max_model_len": 8192,
+          "tokens": [
+            785,
+            6722,
+            315,
+            9625,
+            374
+          ],
+          "token_strs": null
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/tokenize",
+        "json": {
+          "model": "Qwen/Qwen3-0.6B",
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is the capital of France?"
+            }
+          ],
+          "add_generation_prompt": true,
+          "add_special_tokens": false
+        }
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "count": 19,
+          "max_model_len": 8192,
+          "tokens": [
+            151644,
+            872,
+            198,
+            3838,
+            374,
+            279,
+            6722,
+            315,
+            9625,
+            30,
+            151645,
+            198,
+            151644,
+            77091,
+            198,
+            151667,
+            271,
+            151668,
+            271
+          ],
+          "token_strs": null
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/tokenize",
+        "json": {
+          "model": "Qwen/Qwen3-0.6B",
+          "prompt": "The capital of France is Paris",
+          "add_special_tokens": false
+        }
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "count": 6,
+          "max_model_len": 8192,
+          "tokens": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "token_strs": null
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/tokenize",
+        "json": {
+          "model": "Qwen/Qwen3-0.6B",
+          "prompt": "The capital of France is London",
+          "add_special_tokens": false
+        }
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "count": 6,
+          "max_model_len": 8192,
+          "tokens": [
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            7148
+          ],
+          "token_strs": null
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/v1/completions",
+        "json": {
+          "model": "Qwen/Qwen3-0.6B",
+          "prompt": [
+            151644,
+            872,
+            198,
+            3838,
+            374,
+            279,
+            6722,
+            315,
+            9625,
+            30,
+            151645,
+            198,
+            151644,
+            77091,
+            198,
+            151667,
+            271,
+            151668,
+            271,
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            12095
+          ],
+          "echo": true,
+          "logprobs": 1,
+          "max_tokens": 0,
+          "temperature": 0.0
+        }
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "id": "cmpl-815868c5a4bcde6f",
+          "object": "text_completion",
+          "created": 1790492425,
+          "model": "Qwen/Qwen3-0.6B",
+          "choices": [
+            {
+              "index": 0,
+              "text": "<|im_start|>user\nWhat is the capital of France?<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nThe capital of France is Paris",
+              "logprobs": {
+                "text_offset": [
+                  0,
+                  12,
+                  16,
+                  17,
+                  21,
+                  24,
+                  28,
+                  36,
+                  39,
+                  46,
+                  47,
+                  57,
+                  58,
+                  70,
+                  79,
+                  80,
+                  87,
+                  89,
+                  97,
+                  99,
+                  102,
+                  110,
+                  113,
+                  120,
+                  123
+                ],
+                "token_logprobs": [
+                  null,
+                  -10.778056144714355,
+                  -0.039900511503219604,
+                  -4.8687214851379395,
+                  -0.3932773172855377,
+                  -0.05775601044297218,
+                  -7.755898952484131,
+                  -0.44736766815185547,
+                  -4.574841499328613,
+                  -1.863730549812317,
+                  -17.957448959350586,
+                  -0.3122520446777344,
+                  -0.000899982638657093,
+                  -31.671875,
+                  -4.690073013305664,
+                  -0.0005296258023008704,
+                  -15.5,
+                  -0.209585502743721,
+                  -6.079655122448457e-06,
+                  -0.0014701997861266136,
+                  -0.00025233422638848424,
+                  -0.0005678709712810814,
+                  -0.00036137725692242384,
+                  -3.2305197237292305e-05,
+                  -2.9362494945526123
+                ],
+                "tokens": [
+                  "<|im_start|>",
+                  "user",
+                  "\n",
+                  "What",
+                  " is",
+                  " the",
+                  " capital",
+                  " of",
+                  " France",
+                  "?",
+                  "<|im_end|>",
+                  "\n",
+                  "<|im_start|>",
+                  "assistant",
+                  "\n",
+                  "<think>",
+                  "\n\n",
+                  "</think>",
+                  "\n\n",
+                  "The",
+                  " capital",
+                  " of",
+                  " France",
+                  " is",
+                  " Paris"
+                ],
+                "top_logprobs": [
+                  null,
+                  {
+                    "user": -10.778056144714355,
+                    "Question": -5.8874311447143555
+                  },
+                  {
+                    "\n": -0.039900511503219604
+                  },
+                  {
+                    "What": -4.8687214851379395,
+                    "what": -2.8687214851379395
+                  },
+                  {
+                    " is": -0.3932773172855377
+                  },
+                  {
+                    " the": -0.05775601044297218
+                  },
+                  {
+                    " capital": -7.755898952484131,
+                    " value": -1.8183989524841309
+                  },
+                  {
+                    " of": -0.44736766815185547
+                  },
+                  {
+                    " France": -4.574841499328613,
+                    " the": -0.4498414397239685
+                  },
+                  {
+                    "?": -1.863730549812317,
+                    "?\n": -0.7387305498123169
+                  },
+                  {
+                    "<|im_end|>": -17.957448959350586,
+                    " The": -1.810964584350586
+                  },
+                  {
+                    "\n": -0.3122520446777344
+                  },
+                  {
+                    "<|im_start|>": -0.000899982638657093
+                  },
+                  {
+                    "assistant": -31.671875,
+                    "\n": -2.3841855067985307e-07
+                  },
+                  {
+                    "\n": -4.690073013305664,
+                    ":\n": -0.19007296860218048
+                  },
+                  {
+                    "<think>": -0.0005296258023008704
+                  },
+                  {
+                    "\n\n": -15.5,
+                    "\n": -2.3841855067985307e-07
+                  },
+                  {
+                    "</think>": -0.209585502743721
+                  },
+                  {
+                    "\n\n": -6.079655122448457e-06
+                  },
+                  {
+                    "The": -0.0014701997861266136
+                  },
+                  {
+                    " capital": -0.00025233422638848424
+                  },
+                  {
+                    " of": -0.0005678709712810814
+                  },
+                  {
+                    " France": -0.00036137725692242384
+                  },
+                  {
+                    " is": -3.2305197237292305e-05
+                  },
+                  {
+                    " Paris": -2.9362494945526123,
+                    " **": -0.061249587684869766
+                  }
+                ]
+              },
+              "finish_reason": "length",
+              "stop_reason": null,
+              "token_ids": null,
+              "prompt_logprobs": [
+                null,
+                {
+                  "872": {
+                    "logprob": -10.778056144714355,
+                    "rank": 9376,
+                    "decoded_token": "user"
+                  },
+                  "14582": {
+                    "logprob": -5.8874311447143555,
+                    "rank": 1,
+                    "decoded_token": "Question"
+                  }
+                },
+                {
+                  "198": {
+                    "logprob": -0.039900511503219604,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "3838": {
+                    "logprob": -4.8687214851379395,
+                    "rank": 23,
+                    "decoded_token": "What"
+                  },
+                  "12555": {
+                    "logprob": -2.8687214851379395,
+                    "rank": 1,
+                    "decoded_token": "what"
+                  }
+                },
+                {
+                  "374": {
+                    "logprob": -0.3932773172855377,
+                    "rank": 1,
+                    "decoded_token": " is"
+                  }
+                },
+                {
+                  "279": {
+                    "logprob": -0.05775601044297218,
+                    "rank": 1,
+                    "decoded_token": " the"
+                  }
+                },
+                {
+                  "6722": {
+                    "logprob": -7.755898952484131,
+                    "rank": 215,
+                    "decoded_token": " capital"
+                  },
+                  "897": {
+                    "logprob": -1.8183989524841309,
+                    "rank": 1,
+                    "decoded_token": " value"
+                  }
+                },
+                {
+                  "315": {
+                    "logprob": -0.44736766815185547,
+                    "rank": 1,
+                    "decoded_token": " of"
+                  }
+                },
+                {
+                  "9625": {
+                    "logprob": -4.574841499328613,
+                    "rank": 3,
+                    "decoded_token": " France"
+                  },
+                  "279": {
+                    "logprob": -0.4498414397239685,
+                    "rank": 1,
+                    "decoded_token": " the"
+                  }
+                },
+                {
+                  "30": {
+                    "logprob": -1.863730549812317,
+                    "rank": 2,
+                    "decoded_token": "?"
+                  },
+                  "5267": {
+                    "logprob": -0.7387305498123169,
+                    "rank": 1,
+                    "decoded_token": "?\n"
+                  }
+                },
+                {
+                  "151645": {
+                    "logprob": -17.957448959350586,
+                    "rank": 52477,
+                    "decoded_token": "<|im_end|>"
+                  },
+                  "576": {
+                    "logprob": -1.810964584350586,
+                    "rank": 1,
+                    "decoded_token": " The"
+                  }
+                },
+                {
+                  "198": {
+                    "logprob": -0.3122520446777344,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "151644": {
+                    "logprob": -0.000899982638657093,
+                    "rank": 1,
+                    "decoded_token": "<|im_start|>"
+                  }
+                },
+                {
+                  "77091": {
+                    "logprob": -31.671875,
+                    "rank": 55201,
+                    "decoded_token": "assistant"
+                  },
+                  "198": {
+                    "logprob": -2.3841855067985307e-07,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "198": {
+                    "logprob": -4.690073013305664,
+                    "rank": 4,
+                    "decoded_token": "\n"
+                  },
+                  "510": {
+                    "logprob": -0.19007296860218048,
+                    "rank": 1,
+                    "decoded_token": ":\n"
+                  }
+                },
+                {
+                  "151667": {
+                    "logprob": -0.0005296258023008704,
+                    "rank": 1,
+                    "decoded_token": "<think>"
+                  }
+                },
+                {
+                  "271": {
+                    "logprob": -15.5,
+                    "rank": 2,
+                    "decoded_token": "\n\n"
+                  },
+                  "198": {
+                    "logprob": -2.3841855067985307e-07,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "151668": {
+                    "logprob": -0.209585502743721,
+                    "rank": 1,
+                    "decoded_token": "</think>"
+                  }
+                },
+                {
+                  "271": {
+                    "logprob": -6.079655122448457e-06,
+                    "rank": 1,
+                    "decoded_token": "\n\n"
+                  }
+                },
+                {
+                  "785": {
+                    "logprob": -0.0014701997861266136,
+                    "rank": 1,
+                    "decoded_token": "The"
+                  }
+                },
+                {
+                  "6722": {
+                    "logprob": -0.00025233422638848424,
+                    "rank": 1,
+                    "decoded_token": " capital"
+                  }
+                },
+                {
+                  "315": {
+                    "logprob": -0.0005678709712810814,
+                    "rank": 1,
+                    "decoded_token": " of"
+                  }
+                },
+                {
+                  "9625": {
+                    "logprob": -0.00036137725692242384,
+                    "rank": 1,
+                    "decoded_token": " France"
+                  }
+                },
+                {
+                  "374": {
+                    "logprob": -3.2305197237292305e-05,
+                    "rank": 1,
+                    "decoded_token": " is"
+                  }
+                },
+                {
+                  "12095": {
+                    "logprob": -2.9362494945526123,
+                    "rank": 2,
+                    "decoded_token": " Paris"
+                  },
+                  "3070": {
+                    "logprob": -0.061249587684869766,
+                    "rank": 1,
+                    "decoded_token": " **"
+                  }
+                }
+              ],
+              "prompt_token_ids": null,
+              "routed_experts": null
+            }
+          ],
+          "service_tier": null,
+          "system_fingerprint": "vllm-0.30.0-83df4be5",
+          "usage": {
+            "prompt_tokens": 25,
+            "total_tokens": 26,
+            "completion_tokens": 1,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "created_cache_tokens": null,
+              "multimodal_tokens": null
+            },
+            "completion_tokens_details": null
+          },
+          "kv_transfer_params": null,
+          "ec_transfer_params": null,
+          "metrics": null
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/v1/completions",
+        "json": {
+          "model": "Qwen/Qwen3-0.6B",
+          "prompt": [
+            151644,
+            872,
+            198,
+            3838,
+            374,
+            279,
+            6722,
+            315,
+            9625,
+            30,
+            151645,
+            198,
+            151644,
+            77091,
+            198,
+            151667,
+            271,
+            151668,
+            271,
+            785,
+            6722,
+            315,
+            9625,
+            374,
+            7148
+          ],
+          "echo": true,
+          "logprobs": 1,
+          "max_tokens": 0,
+          "temperature": 0.0
+        }
+      },
+      "response": {
+        "status": 200,
+        "json": {
+          "id": "cmpl-b4aa42103fc7f3a6",
+          "object": "text_completion",
+          "created": 1790492425,
+          "model": "Qwen/Qwen3-0.6B",
+          "choices": [
+            {
+              "index": 0,
+              "text": "<|im_start|>user\nWhat is the capital of France?<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nThe capital of France is London",
+              "logprobs": {
+                "text_offset": [
+                  0,
+                  12,
+                  16,
+                  17,
+                  21,
+                  24,
+                  28,
+                  36,
+                  39,
+                  46,
+                  47,
+                  57,
+                  58,
+                  70,
+                  79,
+                  80,
+                  87,
+                  89,
+                  97,
+                  99,
+                  102,
+                  110,
+                  113,
+                  120,
+                  123
+                ],
+                "token_logprobs": [
+                  null,
+                  -10.778056144714355,
+                  -0.039900511503219604,
+                  -4.8687214851379395,
+                  -0.3932773172855377,
+                  -0.05775601044297218,
+                  -7.755898952484131,
+                  -0.44736766815185547,
+                  -4.574841499328613,
+                  -1.863730549812317,
+                  -17.957448959350586,
+                  -0.3122520446777344,
+                  -0.000899982638657093,
+                  -31.671875,
+                  -4.690073013305664,
+                  -0.0005296258023008704,
+                  -15.5,
+                  -0.209585502743721,
+                  -6.079655122448457e-06,
+                  -0.0014701997861266136,
+                  -0.00025233422638848424,
+                  -0.0005678709712810814,
+                  -0.00036137725692242384,
+                  -3.2305197237292305e-05,
+                  -9.936249732971191
+                ],
+                "tokens": [
+                  "<|im_start|>",
+                  "user",
+                  "\n",
+                  "What",
+                  " is",
+                  " the",
+                  " capital",
+                  " of",
+                  " France",
+                  "?",
+                  "<|im_end|>",
+                  "\n",
+                  "<|im_start|>",
+                  "assistant",
+                  "\n",
+                  "<think>",
+                  "\n\n",
+                  "</think>",
+                  "\n\n",
+                  "The",
+                  " capital",
+                  " of",
+                  " France",
+                  " is",
+                  " London"
+                ],
+                "top_logprobs": [
+                  null,
+                  {
+                    "user": -10.778056144714355,
+                    "Question": -5.8874311447143555
+                  },
+                  {
+                    "\n": -0.039900511503219604
+                  },
+                  {
+                    "What": -4.8687214851379395,
+                    "what": -2.8687214851379395
+                  },
+                  {
+                    " is": -0.3932773172855377
+                  },
+                  {
+                    " the": -0.05775601044297218
+                  },
+                  {
+                    " capital": -7.755898952484131,
+                    " value": -1.8183989524841309
+                  },
+                  {
+                    " of": -0.44736766815185547
+                  },
+                  {
+                    " France": -4.574841499328613,
+                    " the": -0.4498414397239685
+                  },
+                  {
+                    "?": -1.863730549812317,
+                    "?\n": -0.7387305498123169
+                  },
+                  {
+                    "<|im_end|>": -17.957448959350586,
+                    " The": -1.810964584350586
+                  },
+                  {
+                    "\n": -0.3122520446777344
+                  },
+                  {
+                    "<|im_start|>": -0.000899982638657093
+                  },
+                  {
+                    "assistant": -31.671875,
+                    "\n": -2.3841855067985307e-07
+                  },
+                  {
+                    "\n": -4.690073013305664,
+                    ":\n": -0.19007296860218048
+                  },
+                  {
+                    "<think>": -0.0005296258023008704
+                  },
+                  {
+                    "\n\n": -15.5,
+                    "\n": -2.3841855067985307e-07
+                  },
+                  {
+                    "</think>": -0.209585502743721
+                  },
+                  {
+                    "\n\n": -6.079655122448457e-06
+                  },
+                  {
+                    "The": -0.0014701997861266136
+                  },
+                  {
+                    " capital": -0.00025233422638848424
+                  },
+                  {
+                    " of": -0.0005678709712810814
+                  },
+                  {
+                    " France": -0.00036137725692242384
+                  },
+                  {
+                    " is": -3.2305197237292305e-05
+                  },
+                  {
+                    " London": -9.936249732971191,
+                    " **": -0.061249587684869766
+                  }
+                ]
+              },
+              "finish_reason": "length",
+              "stop_reason": null,
+              "token_ids": null,
+              "prompt_logprobs": [
+                null,
+                {
+                  "872": {
+                    "logprob": -10.778056144714355,
+                    "rank": 9376,
+                    "decoded_token": "user"
+                  },
+                  "14582": {
+                    "logprob": -5.8874311447143555,
+                    "rank": 1,
+                    "decoded_token": "Question"
+                  }
+                },
+                {
+                  "198": {
+                    "logprob": -0.039900511503219604,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "3838": {
+                    "logprob": -4.8687214851379395,
+                    "rank": 23,
+                    "decoded_token": "What"
+                  },
+                  "12555": {
+                    "logprob": -2.8687214851379395,
+                    "rank": 1,
+                    "decoded_token": "what"
+                  }
+                },
+                {
+                  "374": {
+                    "logprob": -0.3932773172855377,
+                    "rank": 1,
+                    "decoded_token": " is"
+                  }
+                },
+                {
+                  "279": {
+                    "logprob": -0.05775601044297218,
+                    "rank": 1,
+                    "decoded_token": " the"
+                  }
+                },
+                {
+                  "6722": {
+                    "logprob": -7.755898952484131,
+                    "rank": 215,
+                    "decoded_token": " capital"
+                  },
+                  "897": {
+                    "logprob": -1.8183989524841309,
+                    "rank": 1,
+                    "decoded_token": " value"
+                  }
+                },
+                {
+                  "315": {
+                    "logprob": -0.44736766815185547,
+                    "rank": 1,
+                    "decoded_token": " of"
+                  }
+                },
+                {
+                  "9625": {
+                    "logprob": -4.574841499328613,
+                    "rank": 3,
+                    "decoded_token": " France"
+                  },
+                  "279": {
+                    "logprob": -0.4498414397239685,
+                    "rank": 1,
+                    "decoded_token": " the"
+                  }
+                },
+                {
+                  "30": {
+                    "logprob": -1.863730549812317,
+                    "rank": 2,
+                    "decoded_token": "?"
+                  },
+                  "5267": {
+                    "logprob": -0.7387305498123169,
+                    "rank": 1,
+                    "decoded_token": "?\n"
+                  }
+                },
+                {
+                  "151645": {
+                    "logprob": -17.957448959350586,
+                    "rank": 52477,
+                    "decoded_token": "<|im_end|>"
+                  },
+                  "576": {
+                    "logprob": -1.810964584350586,
+                    "rank": 1,
+                    "decoded_token": " The"
+                  }
+                },
+                {
+                  "198": {
+                    "logprob": -0.3122520446777344,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "151644": {
+                    "logprob": -0.000899982638657093,
+                    "rank": 1,
+                    "decoded_token": "<|im_start|>"
+                  }
+                },
+                {
+                  "77091": {
+                    "logprob": -31.671875,
+                    "rank": 55201,
+                    "decoded_token": "assistant"
+                  },
+                  "198": {
+                    "logprob": -2.3841855067985307e-07,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "198": {
+                    "logprob": -4.690073013305664,
+                    "rank": 4,
+                    "decoded_token": "\n"
+                  },
+                  "510": {
+                    "logprob": -0.19007296860218048,
+                    "rank": 1,
+                    "decoded_token": ":\n"
+                  }
+                },
+                {
+                  "151667": {
+                    "logprob": -0.0005296258023008704,
+                    "rank": 1,
+                    "decoded_token": "<think>"
+                  }
+                },
+                {
+                  "271": {
+                    "logprob": -15.5,
+                    "rank": 2,
+                    "decoded_token": "\n\n"
+                  },
+                  "198": {
+                    "logprob": -2.3841855067985307e-07,
+                    "rank": 1,
+                    "decoded_token": "\n"
+                  }
+                },
+                {
+                  "151668": {
+                    "logprob": -0.209585502743721,
+                    "rank": 1,
+                    "decoded_token": "</think>"
+                  }
+                },
+                {
+                  "271": {
+                    "logprob": -6.079655122448457e-06,
+                    "rank": 1,
+                    "decoded_token": "\n\n"
+                  }
+                },
+                {
+                  "785": {
+                    "logprob": -0.0014701997861266136,
+                    "rank": 1,
+                    "decoded_token": "The"
+                  }
+                },
+                {
+                  "6722": {
+                    "logprob": -0.00025233422638848424,
+                    "rank": 1,
+                    "decoded_token": " capital"
+                  }
+                },
+                {
+                  "315": {
+                    "logprob": -0.0005678709712810814,
+                    "rank": 1,
+                    "decoded_token": " of"
+                  }
+                },
+                {
+                  "9625": {
+                    "logprob": -0.00036137725692242384,
+                    "rank": 1,
+                    "decoded_token": " France"
+                  }
+                },
+                {
+                  "374": {
+                    "logprob": -3.2305197237292305e-05,
+                    "rank": 1,
+                    "decoded_token": " is"
+                  }
+                },
+                {
+                  "7148": {
+                    "logprob": -9.936249732971191,
+                    "rank": 16,
+                    "decoded_token": " London"
+                  },
+                  "3070": {
+                    "logprob": -0.061249587684869766,
+                    "rank": 1,
+                    "decoded_token": " **"
+                  }
+                }
+              ],
+              "prompt_token_ids": null,
+              "routed_experts": null
+            }
+          ],
+          "service_tier": null,
+          "system_fingerprint": "vllm-0.30.0-83df4be5",
+          "usage": {
+            "prompt_tokens": 25,
+            "total_tokens": 26,
+            "completion_tokens": 1,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "created_cache_tokens": null,
+              "multimodal_tokens": null
+            },
+            "completion_tokens_details": null
+          },
+          "kv_transfer_params": null,
+          "ec_transfer_params": null,
+          "metrics": null
+        }
+      }
+    }
+  ]
+}

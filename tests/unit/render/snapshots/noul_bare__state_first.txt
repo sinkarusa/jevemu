@@ -1,0 +1,11 @@
+template_id: state_first-5d29289f8b87
+<<< user >>>
+State:
+I have asked three times now. Can I please just talk to a real person?
+
+Question:
+Is the customer asking for a human agent?
+
+Respond with Yes or No only.
+<<< assistant >>>
+Answer:

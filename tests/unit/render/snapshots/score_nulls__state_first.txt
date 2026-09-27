@@ -1,0 +1,21 @@
+template_id: state_first-5d29289f8b87
+<<< user >>>
+State:
+[
+  "Order 1182 arrived two days late.",
+  "The box was crushed; the mug inside is fine."
+]
+
+Levels:
+0) No damage
+1)
+2) {
+  "what": "Item unusable",
+  "examples": [
+    "shattered"
+  ]
+}
+
+Respond with the digit only.
+<<< assistant >>>
+Answer:

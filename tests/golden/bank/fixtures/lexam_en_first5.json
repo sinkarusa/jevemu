@@ -1,0 +1,82 @@
+{
+ "_source": {
+  "dataset": "LEXam-Benchmark/LEXam mcq_4_choices test, language == 'en', first 5 rows in file order",
+  "revision": "31e57ae395f92ed7284a4c28d278c55da892b898",
+  "license": "CC-BY-4.0 (https://huggingface.co/datasets/LEXam-Benchmark/LEXam)",
+  "evaluate_idk": "doc.query and doc.gold_index of doc ids 0-4 in third_party/evaluate-idk/results/details/openrouter/openai/gpt-5.2/2025-12-12T15-11-59.471879 (evaluate-idk e5cb812)"
+ },
+ "rows": [
+  {
+   "id": "7e2f2168-4eeb-4b40-b1cc-bbc009a5a2ae",
+   "question": "Please indicate which of the following statements concerning the principle of the separation of powers on the federal level are correct:\ni. The Federal Assembly has the last word on the constitutionality of new acts which it puts into force (subject to a referendum if requested by the people). It is not possible for the Federal Supreme Court to declare a federal act put into force by the Federal Assembly invalid.\nii. The federal judges are elected on the basis of party membership. The term of office is six years, with the possibility to be re-elected. This combination – party membership and a relatively short term of office – is not unproblematic with a view to the judges’ independence.\niii. The Federal Council consists of seven members which are elected by the Federal Assembly. Re-elections are possible and usually occur as a matter of routine.\niv. The people are actively involved in the law-making process on the federal level as they can propose, with a popular initiative (100’000 signatures), to enact a new law, even in cases in which the Federal Assembly does not want to do so.",
+   "choices": "['i and ii', 'i, iii, and iv', 'i and iii', 'i, ii, and iii']",
+   "gold": 3,
+   "language": "en",
+   "area": "Interdisciplinary"
+  },
+  {
+   "id": "3651f6dd-458c-4e85-8577-a4d383a0fe01",
+   "question": "Before which court would you file a claim based on the Sherman Act?\ni. Depends if the defendant is from out of state. If not, before a state court.\nii. This is federal law, therefore before a federal court.\niii. This is a case of original jurisdiction of the US Supreme Court.\niv. Before a federal court, but only if the dispute is about more than $ 75’000.",
+   "choices": "['ii', 'iii', 'iv', 'i and iii']",
+   "gold": 0,
+   "language": "en",
+   "area": "Private"
+  },
+  {
+   "id": "ee9c501e-8d41-49d3-85bc-a4a1e8f6a57c",
+   "question": "Based on the following context, please select all statements that do not apply.\nContext: Legal theory and legal philosophy deal with various kinds of questions, they investigate in various ways.\ni. The question as to whether moral terms denote any entities that exist in the world is one of ontology.\nii. A theory that justifies human dignity based on human autonomy is a purely explanatory one.\niii. Whether people have a duty to help one another, and under what conditions, is a normative question.\niv. Whether and how humans can come to know moral truths is a question of ontology.",
+   "choices": "['i, iii, and iv', 'i, ii, iii, and iv', 'ii and iv', 'i and ii']",
+   "gold": 2,
+   "language": "en",
+   "area": "Interdisciplinary"
+  },
+  {
+   "id": "c60a0867-a71a-43e1-9bf9-4133628413ed",
+   "question": "Which of the following statements is/are incorrect?\ni. With the Act of Mediation in 1803 Napoleon founded the Helvetic Republic.\nii. In Switzerland, a strict reciprocity principle applies with respect to the recognition and enforcement of foreign judgments.\niii. The Convention for the Amelioration of the Condition of the Wounded in Armies in the Field was held on 22 August 1864.\niv. The international community formally recognized the neutrality of Switzerland with the Peace of Westphalia in 1648.",
+   "choices": "['i and iii', 'i and iv', 'i, ii, and iv', 'ii and iv']",
+   "gold": 2,
+   "language": "en",
+   "area": "Interdisciplinary"
+  },
+  {
+   "id": "430dc3d6-009b-4da6-8eba-a01f1c58589c",
+   "question": "Please indicate which of the following statements about the Federal Assembly, the Federal Council and the Federal Supreme Court are correct:\ni. There is only limited constitutional review in Switzerland. The Federal Supreme Court does, however, hear cases in which it is called upon to review federal acts in light of the European Convention on Human Rights (ECHR).\nii. The Federal Council consists of a Prime Minister and six other ministers. The Prime Minister represents Switzerland abroad and enjoys special powers. He/she can dissolve the Federal Assembly and thus trigger general elections\niii. Acts adopted by the Federal Assembly can be challenged before the Federal Supreme Court, and the Supreme Court can annul Acts if they violate the Constitution (this is also known as constitutional review).\niv. It is a Swiss particularity that all major political parties are represented in the Federal Council. To this effect, the so-called magic formula was established (through practice, rather than being based on an explicit provision in the Constitution).",
+   "choices": "['none of the statements', 'ii, iii, and iv', 'i, ii, and iv', 'i and iv']",
+   "gold": 3,
+   "language": "en",
+   "area": "Interdisciplinary"
+  }
+ ],
+ "evaluate_idk_expected": [
+  {
+   "doc_id": 0,
+   "question": "Please indicate which of the following statements concerning the principle of the separation of powers on the federal level are correct:\ni. The Federal Assembly has the last word on the constitutionality of new acts which it puts into force (subject to a referendum if requested by the people). It is not possible for the Federal Supreme Court to declare a federal act put into force by the Federal Assembly invalid.\nii. The federal judges are elected on the basis of party membership. The term of office is six years, with the possibility to be re-elected. This combination – party membership and a relatively short term of office – is not unproblematic with a view to the judges’ independence.\niii. The Federal Council consists of seven members which are elected by the Federal Assembly. Re-elections are possible and usually occur as a matter of routine.\niv. The people are actively involved in the law-making process on the federal level as they can propose, with a popular initiative (100’000 signatures), to enact a new law, even in cases in which the Federal Assembly does not want to do so.",
+   "choices_block": "A) i and iii\nB) i, iii, and iv\nC) i, ii, and iii\nD) i and ii\nE) I don't know",
+   "gold_index": 2
+  },
+  {
+   "doc_id": 1,
+   "question": "Before which court would you file a claim based on the Sherman Act?\ni. Depends if the defendant is from out of state. If not, before a state court.\nii. This is federal law, therefore before a federal court.\niii. This is a case of original jurisdiction of the US Supreme Court.\niv. Before a federal court, but only if the dispute is about more than $ 75’000.",
+   "choices_block": "A) i and iii\nB) iv\nC) ii\nD) iii\nE) I don't know",
+   "gold_index": 2
+  },
+  {
+   "doc_id": 2,
+   "question": "Based on the following context, please select all statements that do not apply.\nContext: Legal theory and legal philosophy deal with various kinds of questions, they investigate in various ways.\ni. The question as to whether moral terms denote any entities that exist in the world is one of ontology.\nii. A theory that justifies human dignity based on human autonomy is a purely explanatory one.\niii. Whether people have a duty to help one another, and under what conditions, is a normative question.\niv. Whether and how humans can come to know moral truths is a question of ontology.",
+   "choices_block": "A) i, ii, iii, and iv\nB) i and ii\nC) ii and iv\nD) i, iii, and iv\nE) I don't know",
+   "gold_index": 2
+  },
+  {
+   "doc_id": 3,
+   "question": "Which of the following statements is/are incorrect?\ni. With the Act of Mediation in 1803 Napoleon founded the Helvetic Republic.\nii. In Switzerland, a strict reciprocity principle applies with respect to the recognition and enforcement of foreign judgments.\niii. The Convention for the Amelioration of the Condition of the Wounded in Armies in the Field was held on 22 August 1864.\niv. The international community formally recognized the neutrality of Switzerland with the Peace of Westphalia in 1648.",
+   "choices_block": "A) i and iv\nB) i, ii, and iv\nC) i and iii\nD) ii and iv\nE) I don't know",
+   "gold_index": 1
+  },
+  {
+   "doc_id": 4,
+   "question": "Please indicate which of the following statements about the Federal Assembly, the Federal Council and the Federal Supreme Court are correct:\ni. There is only limited constitutional review in Switzerland. The Federal Supreme Court does, however, hear cases in which it is called upon to review federal acts in light of the European Convention on Human Rights (ECHR).\nii. The Federal Council consists of a Prime Minister and six other ministers. The Prime Minister represents Switzerland abroad and enjoys special powers. He/she can dissolve the Federal Assembly and thus trigger general elections\niii. Acts adopted by the Federal Assembly can be challenged before the Federal Supreme Court, and the Supreme Court can annul Acts if they violate the Constitution (this is also known as constitutional review).\niv. It is a Swiss particularity that all major political parties are represented in the Federal Council. To this effect, the so-called magic formula was established (through practice, rather than being based on an explicit provision in the Constitution).",
+   "choices_block": "A) ii, iii, and iv\nB) i, ii, and iv\nC) i and iv\nD) none of the statements\nE) I don't know",
+   "gold_index": 2
+  }
+ ]
+}

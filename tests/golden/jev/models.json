@@ -1,0 +1,21 @@
+{
+ "meta": {
+  "recorded_at": "2026-09-24T23:24:26+00:00",
+  "base_url": "https://api.typesafe.ai",
+  "jevemu_version": "0.0.1"
+ },
+ "response": {
+  "models": [
+   {
+    "name": "jev-latest",
+    "description": "The latest iteration of TypeSafe's System One Model: Jev",
+    "release_date": "2026-09-10T18:38:01.391457+00:00"
+   },
+   {
+    "name": "jev-preview",
+    "description": "A preview version of `jev-latest`: should be better in most ways",
+    "release_date": "2026-09-10T18:39:06.057655+00:00"
+   }
+  ]
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "_source": {
+  "repo_id": "SetFit/sst5",
+  "filename": "test.jsonl",
+  "revision": "e51bdcd8cd3a30da231967c1a249ba59361279a3",
+  "sha256": "1384216112a34f3d70b6fa210762f3399bb080410c0456ac6e54a5cb413f04b2",
+  "license": "unknown: no license on the Hub cards of SetFit/sst5 or stanfordnlp/sst (https://huggingface.co/datasets/SetFit/sst5, https://nlp.stanford.edu/sentiment/)",
+  "rows": "first 5 rows in file order"
+ },
+ "format": "jsonl",
+ "rows": [
+  {
+   "text": "no movement , no yuks , not much of anything .",
+   "label": 1,
+   "label_text": "negative"
+  },
+  {
+   "text": "a gob of drivel so sickly sweet , even the eager consumers of moore 's pasteurized ditties will retch it up like rancid crème brûlée .",
+   "label": 0,
+   "label_text": "very negative"
+  },
+  {
+   "text": "` how many more voyages can this limping but dearly-loved franchise survive ? '",
+   "label": 2,
+   "label_text": "neutral"
+  },
+  {
+   "text": "so relentlessly wholesome it made me want to swipe something .",
+   "label": 2,
+   "label_text": "neutral"
+  },
+  {
+   "text": "gangs of new york is an unapologetic mess , whose only saving grace is that it ends by blowing just about everything up .",
+   "label": 0,
+   "label_text": "very negative"
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+template_id: question_first-6f75027397a3
+<<< system >>>
+Read the state in the next message, then answer.
+
+Question:
+{
+  "field": {
+    "name": "customer_name",
+    "type": "string",
+    "description": "The organization the invoice was issued to."
+  },
+  "question": "Which option is the value of `field` in `source_text`?"
+}
+
+Options:
+- Beaver Logistics
+- Dam Logistics
+- Beaver Dam Logistics
+- Beaver
+- Dam
+
+Respond with the option name only.
+<<< user >>>
+State:
+{
+  "source_text": "Invoice #4471 issued March 3, 2026 to Beaver Dam Logistics for $12,840.00, net 30."
+}
+<<< assistant >>>
+Answer:

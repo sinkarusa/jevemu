@@ -1,0 +1,136 @@
+{
+  "format": "jevemu.calibrator_registry",
+  "version": 1,
+  "calibrators": [
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:10:4a0bcc85ad6db29b",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.9961777392113238
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:150:6ad22f70c3e44a2a",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.196925327875787
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:4:503f248273fbb6c6",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.7766378355448003
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:4:cf9e907ab30ae267",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 2.724486303892361
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:5:62106b9c5cb2462d",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 2.1724075790249926
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:6:0222984747bf3fc7",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 2.310285905179619
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:77:0a3f622029033ef1",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.532404510634889
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:7:a36a5b1975aa25c0",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.6328809390586887
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:8:35ffc55969463aa9",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.7586316832292723
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "choice:9:926eb22cfa3771fa",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 2.3272361371067083
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "noul:2:da39667d142647f1",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 3.133356435053511
+      }
+    },
+    {
+      "backend": "vllm_http",
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "signature": "score:5:6276777a0d628fc5",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 3.5678225302046522
+      }
+    }
+  ],
+  "fallbacks": [
+    {
+      "model": "cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4",
+      "template_id": "state_first-5d29289f8b87",
+      "calibrator": {
+        "name": "temperature",
+        "temperature": 1.680530076890273
+      }
+    }
+  ]
+}

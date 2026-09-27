@@ -1,0 +1,9 @@
+{#- question_first: one question over many states. The system message (the question) is the
+    prefix shared across states; the user message is the state. Exports one variable per role. -#}
+{% import "_blocks.j2" as blocks %}
+{% set system %}
+Read the state in the next message, then answer.
+
+{{ blocks.question_block(question) }}
+{%- endset %}
+{% set user = blocks.state_block(state) %}

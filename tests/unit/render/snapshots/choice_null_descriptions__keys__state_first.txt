@@ -1,0 +1,27 @@
+template_id: state_first-5d29289f8b87
+<<< user >>>
+State:
+{
+  "source_text": "Invoice #4471 issued March 3, 2026 to Beaver Dam Logistics for $12,840.00, net 30."
+}
+
+Question:
+{
+  "field": {
+    "name": "customer_name",
+    "type": "string",
+    "description": "The organization the invoice was issued to."
+  },
+  "question": "Which option is the value of `field` in `source_text`?"
+}
+
+Options:
+- Beaver Logistics
+- Dam Logistics
+- Beaver Dam Logistics
+- Beaver
+- Dam
+
+Respond with the option name only.
+<<< assistant >>>
+Answer:

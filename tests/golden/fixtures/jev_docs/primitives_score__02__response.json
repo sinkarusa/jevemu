@@ -1,0 +1,56 @@
+{
+  "model": "jev-1.13.0",
+  "answers": {
+    "severity": {
+      "type": "score",
+      "score": 1.24,
+      "confidence": 0.64,
+      "legend": {
+        "0": "Cosmetic; no impact to functionality",
+        "1": "Broken or degraded feature, but workaround exists",
+        "2": "Blocking issue; no workaround exists"
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.76,
+        "2": 0.24
+      }
+    },
+    "frustration": {
+      "type": "score",
+      "score": 1.28,
+      "confidence": 0.58,
+      "legend": {
+        "0": "Calm, just stating facts",
+        "1": "Frustrated but civil",
+        "2": "Very angry, strong language or threatening to leave"
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.72,
+        "2": 0.28
+      }
+    },
+    "report_quality": {
+      "type": "score",
+      "score": 3.0,
+      "confidence": 1.0,
+      "legend": {
+        "0": "No detail; just says something is broken",
+        "1": "Names the feature but no steps or environment",
+        "2": "Steps to reproduce or environment, but not both",
+        "3": "Steps to reproduce and environment"
+      },
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.0
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 468,
+    "output_tokens": 43
+  }
+}

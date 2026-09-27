@@ -1,0 +1,14 @@
+template_id: state_first-5d29289f8b87
+<<< user >>>
+State:
+{
+  "zeta_last_name": "Müller",
+  "alpha_note": "Café order, paid in €"
+}
+
+Criteria:
+No: No complaint in the note
+
+Respond with Yes or No only.
+<<< assistant >>>
+Answer:

@@ -1,0 +1,71 @@
+# Pinned vLLM OpenAI-compatible server for jevemu (backend jevemu.backends.vllm_http).
+#
+#   scripts/serve_vllm.sh [--preset NAME]                   # presets: docker/vllm/presets/*.env
+#   docker compose -f docker/vllm/compose.yaml up -d        # defaults below (Qwen/Qwen3-0.6B)
+#   docker compose -f docker/vllm/compose.yaml down
+#
+# The image is pinned by digest; every probe report, golden fixture and BackendInfo records it
+# (export JEVEMU_VLLM_IMAGE to the same reference). Launch flags follow docs/implementation/design.md
+# ("Server launch"); --enable-prompt-tokens-details makes usage report cached_tokens.
+# JEVEMU_VLLM_DEFAULT_CHAT_TEMPLATE_KWARGS (JSON, no spaces) becomes
+# --default-chat-template-kwargs, which vLLM applies to chat and /tokenize requests alike.
+# JEVEMU_VLLM_EXTRA_ARGS is word-split and appended verbatim (e.g. "--language-model-only
+# --max-num-seqs=16"); values must not contain spaces.
+name: jevemu-vllm
+
+services:
+  vllm:
+    image: vllm/vllm-openai:v0.30.0@sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90
+    ipc: host
+    ports:
+      - "${JEVEMU_VLLM_PORT:-8000}:8000"
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      JEVEMU_VLLM_MODEL: ${JEVEMU_VLLM_MODEL:-Qwen/Qwen3-0.6B}
+      JEVEMU_VLLM_MODEL_REVISION: ${JEVEMU_VLLM_MODEL_REVISION:-main}
+      JEVEMU_VLLM_MAX_LOGPROBS: ${JEVEMU_VLLM_MAX_LOGPROBS:-576}
+      JEVEMU_VLLM_LOGPROBS_MODE: ${JEVEMU_VLLM_LOGPROBS_MODE:-raw_logprobs}
+      JEVEMU_VLLM_MAX_MODEL_LEN: ${JEVEMU_VLLM_MAX_MODEL_LEN:-8192}
+      JEVEMU_VLLM_DTYPE: ${JEVEMU_VLLM_DTYPE:-auto}
+      JEVEMU_VLLM_GPU_MEMORY_UTILIZATION: ${JEVEMU_VLLM_GPU_MEMORY_UTILIZATION:-0.85}
+      JEVEMU_VLLM_DEFAULT_CHAT_TEMPLATE_KWARGS: ${JEVEMU_VLLM_DEFAULT_CHAT_TEMPLATE_KWARGS:-}
+      JEVEMU_VLLM_EXTRA_ARGS: ${JEVEMU_VLLM_EXTRA_ARGS:-}
+    # "$$" is a literal "$" for the container shell (compose would interpolate "$").
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -- "$$JEVEMU_VLLM_MODEL" \
+          --revision="$$JEVEMU_VLLM_MODEL_REVISION" \
+          --port=8000 \
+          --max-logprobs="$$JEVEMU_VLLM_MAX_LOGPROBS" \
+          --logprobs-mode="$$JEVEMU_VLLM_LOGPROBS_MODE" \
+          --enable-prefix-caching \
+          --enable-prompt-tokens-details \
+          --max-model-len="$$JEVEMU_VLLM_MAX_MODEL_LEN" \
+          --seed=0 \
+          --dtype="$$JEVEMU_VLLM_DTYPE" \
+          --gpu-memory-utilization="$$JEVEMU_VLLM_GPU_MEMORY_UTILIZATION"
+        if [ -n "$$JEVEMU_VLLM_DEFAULT_CHAT_TEMPLATE_KWARGS" ]; then
+          set -- "$$@" --default-chat-template-kwargs="$$JEVEMU_VLLM_DEFAULT_CHAT_TEMPLATE_KWARGS"
+        fi
+        echo "vllm serve $$* $$JEVEMU_VLLM_EXTRA_ARGS"
+        exec vllm serve "$$@" $$JEVEMU_VLLM_EXTRA_ARGS
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=4)
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s

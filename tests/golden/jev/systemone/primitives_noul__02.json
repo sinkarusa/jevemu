@@ -1,0 +1,91 @@
+{
+ "meta": {
+  "recorded_at": "2026-09-24T23:24:26+00:00",
+  "base_url": "https://api.typesafe.ai",
+  "jevemu_version": "0.0.1",
+  "source": "tests/golden/fixtures/jev_docs/primitives_noul__02__request.json",
+  "model": "jev-1.13.0",
+  "request_id": "req_01a0d5bc0e6b7faea82283a9b2775818",
+  "latency_ms": 116.3,
+  "input_tokens": 584,
+  "cost_usd": 2.4528000000000003e-05
+ },
+ "request": {
+  "state": {
+   "resume": {
+    "name": "John Smith",
+    "location": "Oakland, CA",
+    "summary": "Backend engineer with eight years of Python and Go experience.",
+    "experience": [
+     {
+      "employer": "Google",
+      "title": "Senior Backend Engineer",
+      "years": "2021-2025"
+     },
+     {
+      "employer": "Microsoft",
+      "title": "Software Engineer",
+      "years": "2017-2021"
+     }
+    ]
+   }
+  },
+  "model": "jev-1.13.0",
+  "questions": {
+   "same_as_record_18": {
+    "type": "noul",
+    "instructions": {
+     "potential_duplicate": {
+      "name": "Jon Smith",
+      "location": "Oakland, CA",
+      "last_employer": "Google"
+     },
+     "question": "Is the resume for the same person as `potential_duplicate`?"
+    }
+   },
+   "same_as_record_42": {
+    "type": "noul",
+    "instructions": {
+     "potential_duplicate": {
+      "name": "John Smith",
+      "location": "Austin, TX",
+      "last_employer": "Lone Star Freight"
+     },
+     "question": "Is the resume for the same person as `potential_duplicate`?"
+    }
+   },
+   "same_as_record_77": {
+    "type": "noul",
+    "instructions": {
+     "potential_duplicate": {
+      "name": "John Smithers",
+      "location": "Oakland, CA",
+      "last_employer": "Bay Health Clinic"
+     },
+     "question": "Is the resume for the same person as `potential_duplicate`?"
+    }
+   }
+  }
+ },
+ "response": {
+  "model": "jev-1.13.0",
+  "answers": {
+   "same_as_record_18": {
+    "type": "noul",
+    "noul": 0.74
+   },
+   "same_as_record_42": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "same_as_record_77": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  },
+  "usage": {
+   "input_tokens": 584,
+   "output_tokens": 67
+  }
+ }
+}
