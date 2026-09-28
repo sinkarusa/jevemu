@@ -1,23 +1,24 @@
 # Candidate models that fit one RTX 3090
 
-This is a load-and-sanity pass over Qwen-family instruct checkpoints for one RTX 3090, not the
-model selection itself. All 16 presets load with an 8,192-token context and thinking off, and
-answer 20 smoke items sensibly, so all 16 go on to the selection runs. A second pass added small
-(2B-12B) models from Qwen and other families for the speed/quality study; there, Ministral 3
-cannot be served by the pinned image. A last addition, Gemma 4 26B-A4B (a mixture-of-experts
-model with 3.8B active parameters), loads with the Gemma 4 12B flags unchanged.
+This is a load-and-sanity pass over Qwen-family instruct checkpoints for one RTX 3090, run before
+model selection. All 16 presets load with an 8,192-token context and thinking off and answer 20
+smoke items sensibly, so all 16 go on to the selection runs. A second pass added small models (2B
+to 12B) from Qwen and other families for the speed/quality study; of these, the pinned image
+cannot serve Ministral 3. Gemma 4 26B-A4B, a mixture-of-experts model with 3.8B active
+parameters, was added last and loads with the Gemma 4 12B flags unchanged.
 
 Measured on 2026-09-25 against the pinned server: vLLM 0.30.0, image
 `vllm/vllm-openai:v0.30.0@sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90`,
-RTX 3090 24 GiB, driver 580.173.02. The question: which Qwen-family instruct checkpoints load on
+RTX 3090 24 GiB, driver 580.173.02. The pass asked which Qwen-family instruct checkpoints load on
 one 24 GiB GPU with `--max-model-len 8192`, answer without chain-of-thought, and are worth the
-model-selection runs on the `select` half of the banks. 20 items cannot rank models (see below).
+model-selection runs on the `select` half of the banks. The 20 smoke items are too few to rank
+models (see below).
 
 ## Conclusion
 
-On the 20 smoke items, accuracy was 0.30-0.50, against Jev's 0.55 on the same items (chance is
-0.20). Nothing that was downloaded was dropped. One preset needed a larger GPU share
-(`qwen3.6-27b-int4-quanttrio`, below). No candidate exposed a backend bug.
+On the 20 smoke items, accuracy was 0.30 to 0.50, against Jev's 0.55 on the same items (chance
+is 0.20). Every downloaded checkpoint was kept. One preset, `qwen3.6-27b-int4-quanttrio`, needed a
+larger GPU share (below). No candidate exposed a backend bug.
 
 | Preset | Checkpoint @ revision | Format (quantizer) | Weights GiB | KV cache at 8,192 max-model-len | Startup s | 20-item acc. (sequential / concurrency 16) | Items/s (concurrency 16) | Jev agreement |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -50,34 +51,34 @@ How to read the table:
 
 Findings:
 
-1. **The 20 items do not rank models.** At these accuracies one standard error is about 0.11.
-   The same preset scored 0.40 in the earlier 20-item smoke run and 0.35 here. Three presets
-   changed accuracy between the sequential and the concurrency-16 pass on the same server,
-   because batch composition moves logprobs (see the quantization report's noise floors). Rank
-   on the `select` halves.
-2. **Qwen3.5-35B-A3B and Qwen3.6-35B-A3B fit, as 4-bit builds that keep everything but the
-   routed experts in bf16.** Their 20.27 GiB of weights leave only 0.72 GiB of KV cache at 0.95.
-   But these mixture-of-experts (MoE) models keep KV in only 10 of 40 layers, with 2 KV heads,
-   so that still holds 20,480 tokens (2.5 concurrent 8,192-token requests). They are the fastest
-   Qwen3.5-architecture candidates: 26-27 items/s at concurrency 16, against about 5 for every
-   dense 27B build. Qwen3-30B-A3B-2507 is faster still (32 items/s).
-3. **Dense 27B builds: 16.8-19.1 GiB.**
-   - The group-64/128 builds (RedHatAI g128, groxaxo g64 and g128) leave 2.4-2.9 GiB of KV cache
-     (24-29k tokens). The group-32 builds (cyankiwi, palmfuture, btbtyler09) leave 1.3-1.7 GiB
-     (13-17k tokens).
+1. The 20 items do not rank models. At these accuracies one standard error is about 0.11. The
+   same preset scored 0.40 in the earlier 20-item smoke run and 0.35 here. Three presets changed
+   accuracy between the sequential and the concurrency-16 pass on the same server, because batch
+   composition moves logprobs (see the quantization report's noise floors). Rank on the `select`
+   halves.
+2. Qwen3.5-35B-A3B and Qwen3.6-35B-A3B fit as 4-bit builds that keep everything but the routed
+   experts in bf16. Their 20.27 GiB of weights leave only 0.72 GiB of KV cache at 0.95. These
+   mixture-of-experts (MoE) models keep KV in only 10 of 40 layers, with 2 KV heads, so that
+   still holds 20,480 tokens (2.5 concurrent 8,192-token requests). They are the fastest
+   Qwen3.5-architecture candidates, at 26 to 27 items/s at concurrency 16 against about 5 for
+   every dense 27B build. Qwen3-30B-A3B-2507 is faster still (32 items/s).
+3. The dense 27B builds take 16.8 to 19.1 GiB.
+   - The group-64/128 builds (RedHatAI g128, groxaxo g64 and g128) leave 2.4 to 2.9 GiB of KV
+     cache (24k to 29k tokens). The group-32 builds (cyankiwi, palmfuture, btbtyler09) leave 1.3
+     to 1.7 GiB (13k to 17k tokens).
    - `QuantTrio/Qwen3.6-27B-AWQ` keeps attention q/k/v and layer 0 in bf16 (19.05 GiB). At 0.95
      it had 0.62 GiB of KV cache, short of the 0.81 GiB one 8,192-token request needs, so vLLM
      refused to start. Its preset takes 0.97 of the GPU and `--max-num-batched-tokens=512`,
      which gives 1.14 GiB (11,083 tokens).
-   - Throughput is flat across the new 27B presets (5.0-5.1 items/s): Marlin costs the same here
-     at group 32, 64 and 128. The existing `qwen3.8-27b-awq` measured 4.45. Its only launch
+   - Throughput is flat across the new 27B presets (5.0 to 5.1 items/s), so Marlin costs the same
+     here at group 32, 64 and 128. The existing `qwen3.8-27b-awq` measured 4.45. Its only launch
      difference is the missing `--generation-config=vllm` (so the checkpoint's top-k/top-p
      sampling defaults apply), but it was also the first run of the session, so the cause was
      not isolated.
-4. **Dense 32B baselines** (Qwen3-32B, Qwen2.5-32B) keep KV in all 64 layers with 8 heads (256
-   KiB per token). So 2.4-2.5 GiB holds only about 10k tokens: 1.2 concurrent 8,192-token
+4. The dense 32B baselines (Qwen3-32B, Qwen2.5-32B) keep KV in all 64 layers with 8 heads (256
+   KiB per token), so 2.4 to 2.5 GiB holds only about 10k tokens, or 1.2 concurrent 8,192-token
    requests.
-5. **Echo (S4) is safe on every preset at concurrency 16.** The runner's echo pass (20 items, 16
+5. Echo (S4) is safe on every preset at concurrency 16. The runner's echo pass (20 items, 16
    in flight, letter keys) completed without error on the MoE builds, on
    `qwen3.6-27b-int4-quanttrio` at 0.97, on the Qwen3 and Qwen2.5 baselines and on the 9B
    presets. The pass was added after the other 27B presets had run, so for those six new 27B
@@ -85,7 +86,7 @@ Findings:
    the vocabulary and `--max-num-batched-tokens`, not the model. Those presets use the same
    vocabulary, batch limit and 0.95 share as the 35B presets that passed, and `qwen3.8-27b-awq`
    also ran S4 on all 198 GPQA items in the quantization report.
-6. **Thinking is off and nothing is injected.**
+6. Thinking is off and nothing is injected.
    - Every Qwen3.5-architecture and Qwen3 hybrid preset renders
      `<|im_start|>assistant\n<think>\n\n</think>\n\n` after the user turn. The system message is
      unchanged (no Qwen3.8 reasoning-effort line when thinking is off).
@@ -96,24 +97,24 @@ Findings:
      the default now, does not.
    - The Qwen3.5-architecture templates trim the prefill's trailing space; the Qwen3/Qwen2.5
      ones do not. Either way, the adapter's rendering keeps it (checked per preset).
-7. **`RedHatAI/Qwen3.8-27B-INT4` declares an FP8 KV cache** (`kv_cache_scheme`). vLLM 0.30.0
+7. `RedHatAI/Qwen3.8-27B-INT4` declares an FP8 KV cache (`kv_cache_scheme`). vLLM 0.30.0
    applies it when `--kv-cache-dtype` is `auto`, so this preset passes
    `--kv-cache-dtype=bfloat16` to match every other preset's KV cache.
-8. **Downloads: 13 checkpoints, 239.3 GiB (256.9 GB)**, slightly over the planned ~250 GB. So
-   no AutoRound build was downloaded. Next in line were `Intel/Qwen3.6-27B-int4-AutoRound`
-   (17.7 GiB) and `Frozenlock/Qwen3.8-27B-int4-AutoRound` (17.7 GiB). The disk now has about
-   69 GB free.
+8. The downloads came to 13 checkpoints, 239.3 GiB (256.9 GB), slightly over the planned ~250
+   GB, so no AutoRound build was downloaded. Next in line were
+   `Intel/Qwen3.6-27B-int4-AutoRound` (17.7 GiB) and `Frozenlock/Qwen3.8-27B-int4-AutoRound`
+   (17.7 GiB). The disk now has about 69 GB free.
 
 ## Preset flags
 
 The new presets differ from each other only where noted here.
 
-- **Qwen3.5-architecture checkpoints** (all 27B and 35B-A3B builds) share the `qwen3.8-27b-awq`
+- The Qwen3.5-architecture checkpoints (all 27B and 35B-A3B builds) share the `qwen3.8-27b-awq`
   launch, plus `--generation-config=vllm` and `--dtype=bfloat16` (the base models are bf16;
   several uploads declare float16). That launch is: `--language-model-only` (no vision tower),
   `--max-num-seqs=16`, `--max-num-batched-tokens=1024` (512 for QuantTrio),
   `enable_thinking=false` by server default, and 0.95 of the GPU (0.97 for QuantTrio).
-- **Text-only baselines** (Qwen3, Qwen2.5) drop `--language-model-only` and keep the
+- The text-only baselines (Qwen3, Qwen2.5) drop `--language-model-only` and keep the
   checkpoint's dtype (fp16 for the AutoAWQ uploads, bf16 for RedHatAI's). They use 0.95 of the
   GPU for the 32B models and 0.90 for the smaller ones.
 - `qwen3.8-27b-int4-redhat` adds `--kv-cache-dtype=bfloat16` (finding 7).
@@ -139,40 +140,40 @@ activations were indistinguishable for QuantTrio's INT4
 | RedHatAI 30B-A3B-2507 | attention, routed experts, router | none |
 | Qwen3-32B, Qwen3-14B, Qwen2.5-32B (AutoAWQ) | attention, MLPs | none |
 
-Linear kernels (from the vLLM log): `MarlinLinearKernel` for every dense build
-(CompressedTensorsWNA16, AutoGPTQLinearMethod, AutoAWQMarlinLinearMethod). The MoE builds use the
-Marlin WNA16 MoE backend (`MarlinExperts`). Attention backend: FlashAttention everywhere.
+The vLLM log shows `MarlinLinearKernel` for every dense build (CompressedTensorsWNA16,
+AutoGPTQLinearMethod, AutoAWQMarlinLinearMethod) and the Marlin WNA16 MoE backend
+(`MarlinExperts`) for the MoE builds. The attention backend is FlashAttention everywhere.
 
 ## Method
 
-**Discovery.** The Hugging Face API listed every Qwen3.8/3.6/3.5 27B and 35B-A3B upload in a
+Candidates came from the Hugging Face API: every Qwen3.8/3.6/3.5 27B and 35B-A3B upload in a
 4-bit or 8-bit format vLLM can serve, plus the official quantized Qwen3 and Qwen2.5 baselines.
-Calls used: `list_models` by author `Qwen` and by name search, sorted by downloads; `model_info`
-with file metadata; safetensors headers.
+The calls were `list_models` by author `Qwen` and by name search, sorted by downloads;
+`model_info` with file metadata; and the safetensors headers.
 
 Sizes below are safetensors totals at the pinned commit. Whether a build fits was judged on its
 language-model share: the safetensors headers without the vision tower and the MTP head, which
 `--language-model-only` and the non-speculative launch never load. This matched vLLM's loaded
 weights within 0.45 GiB for every 27B and 35B-A3B build tried.
 
-Order of preference: official checkpoints first, then reputable quantizers (RedHatAI, Intel,
-QuantTrio, cyankiwi), then high-download community builds. Fine-tunes and other runtimes'
-formats are out.
+Official checkpoints came first, then reputable quantizers (RedHatAI, Intel, QuantTrio,
+cyankiwi), then high-download community builds. Fine-tunes and other runtimes' formats were left
+out.
 
 Every chat template was hashed against its base model's. All but two are byte-identical. The two
 that differ (`groxaxo/Qwen3.6-27B-GPTQ-Pro-4bit`, `palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4`) were
 rendered with jinja2 against the official Qwen3.6 template for system + user, user only, and
 system + user + assistant prefill, thinking on and off: identical output in all 12 cases.
 
-**Download budget.** All checkpoints share `~/.cache/huggingface` with the container. The plan
-capped new downloads at about 250 GB. Checkpoints were downloaded at pinned commits in priority
+All checkpoints share `~/.cache/huggingface` with the container, and the plan capped new
+downloads at about 250 GB. Checkpoints were downloaded at pinned commits in priority
 order: Qwen3.8-27B builds, Qwen3.6-27B builds, the official 35B-A3B, the baselines, and then
 Qwen3.6-35B-A3B once the official 35B-A3B had shown that the layout fits.
 
-**Per candidate.** A throwaway runner did the steps below. Per-preset metadata, server logs and
-smoke-run outputs are in the gitignored `runs/candidates/<preset>/`.
+A throwaway runner took each candidate through the steps below. Per-preset metadata, server
+logs and smoke-run outputs are in the gitignored `runs/candidates/<preset>/`.
 
-1. Stop any server and run `scripts/serve_vllm.sh --preset NAME`. Startup = seconds to a
+1. Stop any server and run `scripts/serve_vllm.sh --preset NAME`. Startup is the seconds to a
    healthy `/health`. Each run is a new container, so torch.compile and CUDA graphs are rebuilt
    and the prefix cache is empty.
 2. Read weights, KV cache and kernels from the server log.
@@ -187,10 +188,10 @@ smoke-run outputs are in the gitignored `runs/candidates/<preset>/`.
    response cache, $0) and the emulator. "20-item accuracy" is this smoke run's (sequential)
    emulator accuracy.
 
-**Resolution.** With 20 items, one standard error of an accuracy near 0.4 is 0.11. Restarting
-the same server moved `qwen3.8-27b-awq` from 0.40 (the earlier smoke run) to 0.35. The 20-item
-numbers only show that a checkpoint answers sensibly (well above the 0.2 chance level on A-D +
-IDK). They do not rank candidates.
+With 20 items, one standard error of an accuracy near 0.4 is 0.11. Restarting the same server
+moved `qwen3.8-27b-awq` from 0.40 (the earlier smoke run) to 0.35. The 20-item numbers only show
+that a checkpoint answers sensibly (well above the 0.2 chance level on A to D plus IDK) and do not
+rank candidates.
 
 ## Considered, not tried
 
@@ -224,10 +225,10 @@ IDK). They do not rank candidates.
 
 ## Small models for the speed/quality study
 
-Sep 25, 2026. The presets above are 9B-35B Qwen models. For the speed/quality trade-off
-([reports/speed_quality/](../../reports/speed_quality/README.md)), the same pinned server was
-given small instruct models (2B-12B) from Qwen and from the families with the strongest small
-models.
+Sep 25, 2026. The presets above are Qwen models from 9B to 35B. For the speed/quality trade-off
+([reports/speed_quality/](../../reports/speed_quality/README.md)), small instruct models (2B to
+12B) from Qwen and from the families with the strongest small models were loaded on the same
+pinned server.
 
 Discovery used the Hugging Face API: `list_models` per author, sorted by creation date (Qwen,
 google, microsoft, meta-llama, HuggingFaceTB, mistralai, ibm-granite, LiquidAI, nvidia, allenai
@@ -236,7 +237,7 @@ architecture below is in the pinned image's model registry (SmolLM3 through the 
 backend). Revisions are pinned in the presets. Per-preset logs are in the gitignored
 `runs/select/sweep/` (`preflight.<preset>.log`, `render.<preset>.log`, `<preset>.screen.*.log`).
 
-**Render check.** For one MMLU-Pro, BoolQ, SST-5 and banking77 screen item each: a live
+The render check took one MMLU-Pro, BoolQ, SST-5 and banking77 screen item each and ran a live
 `/tokenize` of the `state_first` prompt, plus the unconstrained top-10 first tokens after the
 prefill. On every kept preset the prompt is one user turn, then the model's generation prompt,
 then `Answer:`, and the first token is a label (`" F"`, `" Yes"`/`" No"`, or the space before an
@@ -266,31 +267,32 @@ old rendering gave `<|turn>model\nAnswer:` instead of
 
 Findings:
 
-1. **Every kept model loads and answers sensibly** (screen results are in the report). Two
-   templates put the day's date into the prompt (SmolLM3, Llama 3.2), so their prompts change
-   from day to day. The injected text is a generic persona and date, not an instruction that
-   changes the task, so it was kept as the vendors' default.
-2. **Gemma 4 E4B needs eager mode.** With torch.compile, the profiling run tried to allocate a
+1. Every kept model loads and answers sensibly (screen results are in the report). Two templates
+   put the day's date into the prompt (SmolLM3, Llama 3.2), so their prompts change from day to
+   day. The injected text is a generic persona and date and does not change the task, so it was
+   kept as the vendors' default.
+2. Gemma 4 E4B needs eager mode. With torch.compile, the profiling run tried to allocate a
    second 5.25 GiB block, the size of the per-layer embedding table (262,144 × 10,752 bf16), and
    ran out of memory. With `--enforce-eager` it loads and serves.
-3. **Ministral 3 cannot be served by the pinned image.**
+3. The pinned image cannot serve Ministral 3.
    `mistralai/Ministral-3-3B-Instruct-2512-BF16` (@ `b6d637bef2`, downloaded in Hugging Face
    format) fails at model inspection. vLLM 0.30.0's `pixtral.py` imports
    `PixtralRotaryEmbedding`, which the image's transformers 5.17.0 renamed to
    `PixtralVisionRotaryEmbedding`, so every Mistral3/Pixtral checkpoint fails. The preset
    `ministral-3-3b-bf16` is kept for a future image; it was not screened.
-4. **SmolLM3-3B and Llama 3.2 3B were screened last.** The sweep was paused before them to move
+4. SmolLM3-3B and Llama 3.2 3B were screened last. The sweep was paused before them to move
    the Hugging Face cache. Both are in the report now, near the bottom (9-benchmark screen
    macro 0.5034 and 0.4941, one call per question).
-5. **Gemma 4 12B and 26B-A4B were first run without their empty thought channel.** The adapter
+5. Gemma 4 12B and 26B-A4B were first run without their empty thought channel. The adapter
    now renders every prompt with the generation prompt through `/tokenize`, appends `Answer:` as
    token ids and scores on `/v1/completions`
    ([design.md](../implementation/design.md), "Assistant prefill"). A second bug was found at
    the same time: vLLM's completions top-k is a map keyed by text, and Gemma's vocabulary has
    byte tokens that decode to the same text as normal tokens (`<0x41>` is `"A"`), so the map
-   could keep the wrong one. Logprobs are now keyed by token id. A live A/B on 50 items of each
-   of the 9 benchmarks: 26B-A4B macro accuracy 0.693 → 0.689, NLL 1.548 → 1.447; 12B accuracy
-   0.669 → 0.682, NLL 1.289 → 1.439, and the 12B's probability outside the labels disappears.
+   could keep the wrong one. Logprobs are now keyed by token id. In a live A/B on 50 items of
+   each of the 9 benchmarks, the 26B-A4B's macro accuracy went from 0.693 to 0.689 and its NLL
+   from 1.548 to 1.447. The 12B's accuracy went from 0.669 to 0.682 and its NLL from 1.289 to
+   1.439, and its probability outside the labels disappeared.
    Both models' runs were redone with the fix and one-call scoring: the 26B-A4B's `holdout`
    macro went from 0.714 to 0.735 and the 12B's screen macro from 0.672 to 0.708 over the 9
    benchmarks ([selection.md](selection.md#what-one-call-scoring-changed)).
@@ -306,12 +308,12 @@ from the safetensors headers; "language model" means without the vision tower an
 
 ### Gemma 4 26B-A4B
 
-Sep 26, 2026. Google's mixture-of-experts (MoE) Gemma: 128 experts, 8 routed plus 1 shared dense
-MLP per token, 3.8B of 25.2B parameters active, like the 3B-active Qwen MoE presets. The bf16
-checkpoint (48 GiB) does not fit, and Google publishes no W4A16 build of this model (only GGUF
-and a 16-bit QAT checkpoint). The preset serves cyankiwi's INT4 build of Google's
-quantization-aware-trained (QAT) checkpoint. It is a finalist in
-[selection.md](selection.md#gemma-4-26b-a4b-as-a-finalist).
+Sep 26, 2026. This is Google's mixture-of-experts (MoE) Gemma. It has 128 experts, and each
+token uses 8 routed experts plus 1 shared dense MLP, so 3.8B of 25.2B parameters are active,
+similar to the 3B-active Qwen MoE presets. The bf16 checkpoint (48 GiB) does not fit, and Google
+publishes no W4A16 build of this model (only GGUF and a 16-bit QAT checkpoint). The preset serves
+cyankiwi's INT4 build of Google's quantization-aware-trained (QAT) checkpoint. It is a finalist
+in [selection.md](selection.md#gemma-4-26b-a4b-as-a-finalist).
 
 | Preset | Checkpoint @ revision | License | Params | Weights GiB (vLLM) | KV cache (0.90) | Startup s | Template notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -319,28 +321,29 @@ quantization-aware-trained (QAT) checkpoint. It is a finalist in
 
 Findings:
 
-1. **It fits at 0.90 of the GPU with the `gemma-4-12b-int4` flags unchanged.** All weights are
+1. It fits at 0.90 of the GPU with the `gemma-4-12b-int4` flags unchanged. All weights are
    on the GPU (no offload). `nvidia-smi` showed 20,716 MiB in use. The KV cache holds 5.33
    requests of 8,192 tokens; during the runs at most 55% of it was in use at 16 in flight.
    Startup includes about 35 s of torch.compile. The download (17.19 GB) took 164 s.
-2. **What is 4-bit** (safetensors header): attention q/k/v/o and the routed experts. The dense
+2. The safetensors header shows attention q/k/v/o and the routed experts in 4-bit. The dense
    MLP, the router, the tied embeddings/`lm_head` and the vision tower stay 16-bit. The config
    declares float16; the preset serves bf16, so vLLM casts.
-3. **Triton attention is forced.** vLLM logs "Gemma4 model has heterogeneous head dimensions
+3. Triton attention is forced. vLLM logs "Gemma4 model has heterogeneous head dimensions
    {sliding 256, full 512}. FA4 not available, forcing TRITON_ATTN backend."
-4. **The vision tower is skipped.** It is a 27-layer SigLIP-style encoder (about 1 GiB in fp16,
+4. The vision tower is skipped. It is a 27-layer SigLIP-style encoder (about 1 GiB in fp16,
    not quantized); `--language-model-only` does not load it.
-5. **Template.** The upload's `chat_template.jinja` is an older revision of Google's Gemma 4
-   template. The newer one (the same for Google's 26B-A4B, 26B-A4B QAT and 12B QAT uploads)
-   differs only in tool calling, thinking preservation and multimodal item types, not in the
-   chat or prefill path. Like the 12B, it opens the model turn with an empty
+5. The upload's `chat_template.jinja` is an older revision of Google's Gemma 4 template. The
+   newer one (the same for Google's 26B-A4B, 26B-A4B QAT and 12B QAT uploads) differs only in
+   tool calling, thinking preservation and multimodal item types; the chat and prefill path is
+   the same. Like the 12B, it opens the model turn with an empty
    `<|channel>thought\n<channel|>` block, but only on the generation prompt. The adapter renders
    that prompt before `Answer:` (finding 5 [above](#small-models-for-the-speedquality-study));
    runs before 2026-09-27 rendered `Answer:` as a continued assistant message, without the block,
    and were redone. No thinking text is added. One quirk: a system turn ends with an extra space
    before `<turn|>` (Google's current template has the same line). `state_first` sends no
    system message, so it is not exercised.
-6. **Labels** as in the rest of the family: only `" 0"`..`" 9"` are two tokens (space + digit).
+6. Labels tokenize as in the rest of the family: only `" 0"` to `" 9"` are two tokens (space
+   plus digit).
 
 ### Small models considered, not tried
 
@@ -363,3 +366,13 @@ Findings:
 | `swiss-ai/Apertus-v1.1-4B-Instruct`, `allenai/Olmo-3-7B-Instruct` | 7.13, 13.59 | Lower priority than the families tried |
 | `CohereLabs/tiny-aya-global` | 6.24 | Gated: the token has no access (`GatedRepoError` on `config.json`); CC-BY-NC-4.0 |
 | `XiaomiMiMo/MiMo-V2.6-Distill-Qwen-9B` | | A distilled fine-tune of Qwen3.5-9B |
+
+## CLM-8B
+
+Sep 28, 2026. CLM-8B ([Contrastive-LM/CLM](https://github.com/Contrastive-LM/CLM), Apache-2.0)
+also runs on one RTX 3090. It is a dual encoder with its own server, `clm-serve`
+(`docker/clm/compose.yaml`), so it has no vLLM preset here. It pins the head
+`Contrastive-LM/CLM-v0.1-8B` @ `e939398d45` (sha256 `b2b4a8c9c2d3…`) and the encoder
+`Qwen/Qwen3-8B` @ `b968826d9c` in the same vLLM v0.30.0 image. It answers Jev's wire format and
+ran on all three splits, but it is not a finalist
+([selection.md](selection.md#clm-8b-dual-encoder)).

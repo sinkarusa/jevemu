@@ -4,18 +4,18 @@
 
 jevemu is a Python SDK that reproduces TypeSafe's Jev API (`POST /v1/systemone`) on an open model served by vLLM. To get each answer's probabilities, it makes the model's next token an answer label, then renormalizes the logprobs over the valid labels.
 
-- **What it emulates:** Jev's three question types, with the same request and response schema:
+- It emulates Jev's three question types, with the same request and response schema:
   - Noul (yes/no) returns P(yes).
-  - Choice takes 2–255 options and returns the chosen option, probabilities and a confidence.
-  - Score takes 2–10 ordered levels and returns an expected score, probabilities and a confidence.
-- **Core technique:** letter labels; an `Answer:` prefill, so the next token is a label; constrained decoding to the label set; merging surface variants (`"A"`, `" A"`); and renormalization over valid labels. The recommended strategy (`auto_single`) answers every question in one model call with one-token labels: letters up to 32 options, two-capital codes (`AA`, `AB`, ...) above that. Older fallbacks, a token prefix tree ("trie") and echo (which scores each answer's full text with vLLM's prompt logprobs), take several calls per question and remain available.
-- **Calibration:** optional debiasing (PriDe, permutation, contextual calibration) and post-hoc calibrators (temperature, Platt, isotonic), fitted only on held-out data. PriDe estimates the model's preference for each answer label and divides it out.
-- **Evaluation:** the emulator and the real Jev API answer the same frozen question bank, scored by the same code with the same metrics. Neither system uses chain-of-thought. Jev's published calibration claims are not used.
-- **Benchmarks:** config-driven suites measure quality (accuracy and calibration across datasets) and performance (latency, throughput, cost) for any mix of systems.
+  - Choice takes 2 to 255 options and returns the chosen option, probabilities and a confidence.
+  - Score takes 2 to 10 ordered levels and returns an expected score, probabilities and a confidence.
+- The scoring uses letter labels, an `Answer:` prefill so that the next token is a label, constrained decoding to the label set, merging of surface variants (`"A"`, `" A"`), and renormalization over valid labels. The recommended strategy (`auto_single`) answers every question in one model call with one-token labels: letters up to 32 options, two-capital codes (`AA`, `AB`, ...) above that. Older fallbacks, a token prefix tree ("trie") and echo (which scores each answer's full text with vLLM's prompt logprobs), take several calls per question and remain available.
+- Calibration has optional debiasing (PriDe, permutation, contextual calibration) and post-hoc calibrators (temperature, Platt, isotonic), fitted only on held-out data. PriDe estimates the model's preference for each answer label and divides it out.
+- For evaluation, the emulator and the real Jev API answer the same frozen question bank, scored by the same code with the same metrics. Neither system uses chain-of-thought. Jev's published calibration claims are not used.
+- Config-driven benchmark suites measure quality (accuracy and calibration across datasets) and performance (latency, throughput, cost) for any mix of systems.
 
 Two studies came first, and they settle details the code depends on: an audit of the evaluate-idk code, and probes of vLLM's logprob behavior.
 
-## Scope and key decisions
+## Scope and decisions
 
 | Decision | Choice | Reason |
 | --- | --- | --- |
@@ -32,11 +32,11 @@ Two studies came first, and they settle details the code depends on: an audit of
 
 Metric names used throughout: NLL is the negative log-likelihood of the correct answer; Brier is the mean squared error of the probability vector; ECE is the expected calibration error, the gap between confidence and accuracy averaged over bins. Lower is better for all three.
 
-**Out of scope:** fine-tuning a model, a hosted service, multi-question joint generation (it would break Jev's per-question independence), and non-English data.
+The project does not cover fine-tuning a model, a hosted service, multi-question joint generation (it would break Jev's per-question independence), or non-English data.
 
 ## Findings: the Jev contract
 
-Jev launched on September 15, 2026 as TypeSafe AI's first "System One" model: it returns typed decisions with probabilities, not text. Its API is small, public and easy to mirror. Its confidence formula and calibration are not specified, so both must be measured.
+Jev launched on September 15, 2026 as TypeSafe AI's first "System One" model: it returns typed decisions with probabilities and no text. Its API is small and public, so it is easy to mirror. TypeSafe does not specify its confidence formula or its calibration, so both must be measured.
 
 | Element | Specification |
 | --- | --- |
@@ -44,7 +44,7 @@ Jev launched on September 15, 2026 as TypeSafe AI's first "System One" model: it
 | Request | `state` (string, object or array), `model`, `questions` (map of your IDs to questions; the IDs are not sent to the model) |
 | `noul` | `instructions`, optional `criteria {true, false}` → `{type, noul}` = P(yes); no confidence |
 | `choice` | `instructions`, `criteria: map<option, description or null>`, up to 255 options → `{type, choice, probabilities, confidence}` |
-| `score` | `instructions`, `criteria: array` of 2–10 ordered levels → `{type, score = Σ i·pᵢ, legend, probabilities, confidence}` |
+| `score` | `instructions`, `criteria: array` of 2 to 10 ordered levels → `{type, score = Σ i·pᵢ, legend, probabilities, confidence}` |
 | Response | `{model: "jev-1.13.0", answers, usage: {input_tokens, output_tokens}}` |
 | Models | `jev-1.13.0`; aliases `jev-latest` and `jev-preview` both resolved to 1.13.0 in September 2026 |
 | Limits | \~64k tokens per request, \~32k for state plus the longest question; 250,000 tokens/s and 1,200 requests/min (stated as dynamic) |
@@ -52,9 +52,11 @@ Jev launched on September 15, 2026 as TypeSafe AI's first "System One" model: it
 | Price | $0.042 per 1M input tokens; output free |
 | Precision | Probabilities reported to 0.01; exact zeros occur |
 
-**Semantics to copy:** every question sees the same state and is evaluated on its own; one answer never becomes context for another. `choice` is the argmax, and probabilities sum to 1.
+The emulator copies Jev's semantics: every question sees the same state and is evaluated on its own; one answer never becomes context for another. `choice` is the argmax, and probabilities sum to 1.
 
-**Confidence formula.** The docs call confidence a statistic of the distribution and give the approximation (K·p\_max − 1)/(K − 1), where K is the number of options and p\_max the largest probability. It matches TypeSafe's three-option examples but not several four- and five-option ones:
+### Confidence formula
+
+The docs call confidence a statistic of the distribution and give the approximation (K·p\_max − 1)/(K − 1), where K is the number of options and p\_max the largest probability. It matches TypeSafe's three-option examples but not several four- and five-option ones:
 
 | Example | K | p\_max | Reported | Formula | Match |
 | --- | --- | --- | --- | --- | --- |
@@ -66,7 +68,9 @@ Jev launched on September 15, 2026 as TypeSafe AI's first "System One" model: it
 
 Decision: confidence is a pluggable function. The default is `mode_distance`, fitted from real Jev responses (`docs/research/calibration.md`); for Choice questions it equals the formula above.
 
-**Calibration is claimed, not quantified.** TypeSafe publishes no ECE or Brier numbers. Small independent tests report ECE from about 0.02 to 0.16, depending on the task. One reviewer found that fitting a single temperature on 50–300 labels removed most of the error. TypeSafe's latency figures (70–500 ms) and its headline "193.6x faster, 444.6x cheaper" come from its own evaluations, so this design does not rely on them.
+### Published calibration and speed claims
+
+TypeSafe claims Jev is calibrated but publishes no ECE or Brier numbers. Small independent tests report ECE from about 0.02 to 0.16, depending on the task. One reviewer found that fitting a single temperature on 50 to 300 labels removed most of the error. TypeSafe's latency figures (70 to 500 ms) and its headline "193.6x faster, 444.6x cheaper" come from its own evaluations, so this design does not rely on them.
 
 ## Findings: vLLM capabilities
 
@@ -103,14 +107,14 @@ evaluate-idk tests whether LLMs choose "I don't know" (IDK) when they should. We
 | Model access | Verified | OpenRouter via `OPENROUTER_API_KEY`; `HF_TOKEN` for datasets |
 | Entry point | Verified | `python evaluate.py` runs `run_eval.py endpoint litellm …` once per model. `run_eval.py` is the lighteval CLI plus a reasoning-effort patch. `evaluate.sh` was deleted in October 2025, so the README is stale. Every model is commented out at the pinned SHA |
 | Prompt | Corrected | Asks for step-by-step thinking, states +1 / −1 / 0 scoring, and asks for "Final Answer: ###X###". The task instruction and query form one user message; there is no system prompt. LEXam adds a long legal chain-of-thought instruction |
-| IDK option | Verified | Adds E) "I don't know" with an ASCII apostrophe; E always last, gold always in A–D. A–D are shuffled with the global `random`, seeded once to 42 at import: one sequential stream over rows in dataset order, not a per-question RNG |
+| IDK option | Verified | Adds E) "I don't know" with an ASCII apostrophe; E always last, gold always in A to D. A to D are shuffled with the global `random`, seeded once to 42 at import: one sequential stream over rows in dataset order, not a per-question RNG |
 | Metrics | Corrected | Per item (`trad_score`, `idk_score`, `idk_freq`, `extract_fail`): correct = (1, +1, 0, 0), E = (0, 0, 1, 0), wrong letter = (0, −1, 0, 0), no letter = (0, −1, 0, 1). Corpus means. At most one letter is ever extracted, so the "best outcome" rule never applies |
 | Extraction | Verified | lighteval's letter regexes (six priority groups; the rightmost match wins), then an evaluate-idk fallback: `###X###`, boxed forms, "answer: X", "option/choice X". Exact patterns are in the audit |
 | Datasets | Corrected | GPQA-Diamond (`train`, 198) and LEXam `mcq_4_choices` `test` filtered to `language == "en"` (619, not \~1,650). Neither revision is pinned; LEXam's test file changed in December 2025. lighteval's upstream GPQA shuffle is not used |
 | Standard errors | Verified | lighteval `mean_stderr`: sample SD with ddof = 1, divided by √n. For 0/1 metrics this is √(p(1−p)/(n−1)). The README's ensemble rows use ddof = 0 |
 | README numbers | Verified | The GPQA table came from an older task file with a different prompt and seed. The LEXam table used the pinned prompt, but its ensemble row is stale |
 
-**Two implications for jevemu:**
+The audit has two consequences for jevemu:
 
 - The evaluate-idk prompt asks for chain-of-thought, which Jev cannot do. Both systems therefore run a pre-registered variant of the protocol without chain-of-thought. Its numbers are not comparable to the tables in evaluate-idk's README.
 - Under +1 / 0 / −1 scoring, answering has expected value 2p − 1. A calibrated system should answer only when p\_max > 0.5, so this benchmark directly tests calibration.
@@ -139,13 +143,13 @@ flowchart LR
 
 Along the emulator's path, the Planner picks a strategy, the backend returns token logprobs, and debiasing and calibration run on the client.
 
-**Design principles:**
+The design follows five principles:
 
-1. **One schema.** Jev and the emulator both return `SystemOneResponse`. Emulator-only diagnostics sit under `x_jevemu`, which Jev clients ignore.
-2. **One metrics path.** Metrics never branch on which system produced a record, except to group results.
-3. **Capabilities, not type checks.** Strategies read `Backend.capabilities` and fail fast. This is what lets other backends, such as OpenAI or llama.cpp, slot in.
-4. **All probability maths on the client, in log space.** Backends return raw token logprobs. Renormalization, variant merging, debiasing and calibration are pure, deterministic and unit-tested.
-5. **One question per scoring call (per permutation).** This keeps Jev's independence semantics, and prefix caching keeps it cheap.
+1. Jev and the emulator share one schema: both return `SystemOneResponse`. Emulator-only diagnostics sit under `x_jevemu`, which Jev clients ignore.
+2. One metrics path serves both. Metrics never branch on which system produced a record, except to group results.
+3. Strategies read `Backend.capabilities` instead of checking the backend's type, and fail fast. That lets other backends, such as OpenAI or llama.cpp, slot in.
+4. All probability maths runs on the client, in log space. Backends return raw token logprobs. Renormalization, variant merging, debiasing and calibration are pure, deterministic and unit-tested.
+5. Each scoring call (per permutation) carries one question. This keeps Jev's independence semantics, and prefix caching keeps it cheap.
 
 ## Core types and public API
 
@@ -229,7 +233,7 @@ def compare(a: PredictionSet, b: PredictionSet, *, folds: int = 5,
 
 ## Backend protocol and vLLM adapter
 
-The backend returns raw token logprobs and declares its capabilities. The capability probe measures behavior at startup rather than trusting the docs.
+The backend returns raw token logprobs and declares its capabilities. The capability probe measures that behavior at startup instead of taking it from the docs.
 
 ```python
 # jevemu/backends/base.py
@@ -255,7 +259,7 @@ class Backend(Protocol):
     async def health(self) -> BackendInfo: ...   # model id, HF revision, vLLM version, flags
 ```
 
-**Server launch** (pinned image via `docker/vllm/compose.yaml`; flags checked by `health()`):
+The server runs from the pinned image in `docker/vllm/compose.yaml`, and `health()` checks its flags:
 
 ```bash
 vllm serve <model> --max-logprobs 576 --logprobs-mode raw_logprobs \
@@ -266,61 +270,63 @@ Per-model settings live in presets, `docker/vllm/presets/<name>.env` (model, pin
 
 Record the image digest with the vLLM version in every artifact.
 
-**Adapter behavior (`backends/vllm_http.py`):**
+The HTTP adapter (`backends/vllm_http.py`) works as follows:
 
-- **Prompt tokens.** `/tokenize` renders the messages before the `Answer:` prefill with `add_generation_prompt=true` and the chat-template kwargs (for thinking models the server's `--default-chat-template-kwargs`, set by the preset, turns thinking off). The prefill is tokenized as plain text and appended, trailing whitespace (`Answer: `) as its own tokens, so the model reads the prefill exactly where its own reply would start; the template never sees it (see "Assistant prefill" above).
-- **First-token request.** `/v1/completions` on those ids with `max_tokens=1, temperature=0`, `logprobs` up to the cap, `return_tokens_as_token_ids=true` and `structured_outputs={"choice": labels}`. The completions top-k is a map; keyed by text it keeps only one of several tokens that decode alike (Gemma 4 has byte tokens `<0x41>`, `<0x31>` beside `A`, `1`, and a choice constraint allows both), so it is keyed by id and each id's text comes from `/detokenize`, cached per backend. Same-text tokens add.
-- **Echo path.** `/v1/completions` with `echo=true, logprobs=1, max_tokens=0`, one request per option. vLLM 0.30.0 does not read the prefix cache for prompt-logprob requests, so each request recomputes the prefix. Drop the null first token and treat ≤ −9999 as −∞.
-- **Guardrails.** A unit test ensures the request builder never emits `guided_*`. At startup, a probe with `choice=["Q","Z"]` asserts the output stays in that set.
-- **Capability probe.** Sends a fixed two-option prompt with and without the constraint. If the top-k list holds only valid tokens, the logprobs reflect the constraint mask; if it also holds invalid tokens, they do not. Results are cached per (vLLM version, model, revision, image, flags). On 0.30.0 the mask is reflected (`docs/research/vllm_probe_report.md`).
-- **Concurrency.** A per-backend semaphore (default 32); vLLM batches concurrent requests.
-- **Metadata.** Record the vLLM version, model HF revision, dtype and flags in every prediction set.
+- To build the prompt tokens, `/tokenize` renders the messages before the `Answer:` prefill with `add_generation_prompt=true` and the chat-template kwargs (for thinking models the server's `--default-chat-template-kwargs`, set by the preset, turns thinking off). The prefill is tokenized as plain text and appended, trailing whitespace (`Answer: `) as its own tokens, so the model reads the prefill exactly where its own reply would start; the template never sees it (see "Assistant prefill" above).
+- The first-token request sends those ids to `/v1/completions` with `max_tokens=1, temperature=0`, `logprobs` up to the cap, `return_tokens_as_token_ids=true` and `structured_outputs={"choice": labels}`. The completions top-k is a map; keyed by text it keeps only one of several tokens that decode alike (Gemma 4 has byte tokens `<0x41>`, `<0x31>` beside `A`, `1`, and a choice constraint allows both), so it is keyed by id and each id's text comes from `/detokenize`, cached per backend. Same-text tokens add.
+- The echo path sends one `/v1/completions` request per option, with `echo=true, logprobs=1, max_tokens=0`. vLLM 0.30.0 does not read the prefix cache for prompt-logprob requests, so each request recomputes the prefix. Drop the null first token and treat ≤ −9999 as −∞.
+- A unit test ensures the request builder never emits `guided_*`. At startup, a probe with `choice=["Q","Z"]` asserts the output stays in that set.
+- The capability probe sends a fixed two-option prompt with and without the constraint. If the top-k list holds only valid tokens, the logprobs reflect the constraint mask; if it also holds invalid tokens, they do not. Results are cached per (vLLM version, model, revision, image, flags). On 0.30.0 the mask is reflected (`docs/research/vllm_probe_report.md`).
+- A per-backend semaphore (default 32) limits concurrency; vLLM batches concurrent requests.
+- Every prediction set records the vLLM version, model HF revision, dtype and flags.
 
-**Offline engine (`backends/vllm_offline.py`).** The same protocol over `LLM.generate`, using `SamplingParams` for logprobs, prompt logprobs and structured outputs. It serves batch evaluation and local CPU smoke runs. Latency comparisons against Jev must use the HTTP path.
+The offline engine (`backends/vllm_offline.py`) implements the same protocol over `LLM.generate`, using `SamplingParams` for logprobs, prompt logprobs and structured outputs. It serves batch evaluation and local CPU smoke runs. Latency comparisons against Jev must use the HTTP path.
 
 ## Prompting and scoring strategies
 
 The default strategy reads one token's logprobs over letter labels. The other strategies cover cases where that is not exact.
 
-**Prompt layouts** (Jinja2 templates, byte-stable for caching):
+### Prompt layouts
+
+The layouts are Jinja2 templates, byte-stable for caching:
 
 - `question_first` (one question over many states): system = instructions and labelled criteria; user = state; assistant prefill `Answer:`. The shared prefix is the question.
-- `state_first` (many questions over one state; the default): user = state, then question and criteria; prefill `Answer:`. The shared prefix is the state. In selection it scored 0.05–0.06 higher macro accuracy than `question_first` on every preset tested (`docs/research/selection.md`).
+- `state_first` (many questions over one state; the default): user = state, then question and criteria; prefill `Answer:`. The shared prefix is the state. In selection it scored 0.05 to 0.06 higher macro accuracy than `question_first` on every preset tested (`docs/research/selection.md`).
 - Strings render verbatim. Objects and arrays render as pretty JSON with stable key order.
 - End with `Answer:` and no trailing space: tokenizing the space together with the letter matters for both accuracy and calibration ("Mind the Gap", EMNLP 2025).
 
-**Label schemes:** Choice uses `A…Z`, then `a…z` (52 labels). Score uses digits `0…9`. Noul uses `Yes`/`No`. Warm-up checks, per tokenizer, that each label is a single token.
+### Label schemes
+
+Choice uses `A…Z`, then `a…z` (52 labels). Score uses digits `0…9`. Noul uses `Yes`/`No`. Warm-up checks, per tokenizer, that each label is a single token.
 
 On Qwen3 (and, measured, on Qwen3.8's 248k-token vocabulary), letters, `Yes` and `No` are single tokens with or without a leading space. A digit with a leading space is two tokens (`" 7"` = `" "` + `"7"`). Forcing the bare digit right after `Answer:` distorts the distribution: the model puts ~0.9998 on the space, and we measured 0.976/0.023 forced vs ~0.80/0.20 by echo.
 
 So when every label's spaced form is a space token plus a one-token bare label, S1/S2/S3 extend the prefill to `Answer: ` and read the bare digit there. Across 10 live Score prompts this matched echo within 0.06 (Qwen3-0.6B) and 0.016 (Qwen3.8-27B). The space must reach the model: Qwen3.8's template trims it, which silently moved Score probabilities by up to 0.175 until the adapter appended the space token itself. Letters and Yes/No allow both surfaces right after `Answer:`. Evidence: `scoring/constrained.py` docstring and `docs/research/vllm_probe_report.md`.
 
-**Option-key scheme (`keys`):** echo and trie score the option keys themselves (a `- key: description` listing and "Respond with the option name only."). This lifts the 52-label limit to Jev's 255 options. Known echo limitation: under `sum`, an option that is a prefix of another absorbs its mass. The trie handles this correctly.
+In the option-key scheme (`keys`), echo and trie score the option keys themselves (a `- key: description` listing and "Respond with the option name only."). This lifts the 52-label limit to Jev's 255 options. Known echo limitation: under `sum`, an option that is a prefix of another absorbs its mass. The trie handles this correctly.
 
-**Code scheme (`codes`, `auto_single` only):** Choice questions above 32 options are labelled `AA`, `AB`, ... (lexicographic), keeping only the codes whose bare and space-prefixed surfaces are each one token for the served model (checked through `/tokenize`, cached per backend: 522 of 676 on Qwen3.6, 588 on Gemma 4). They are listed and asked for like letters (`AB) name`, "Respond with the letter only."), so the templates and every `template_id` are unchanged; on 300 banking77 and 300 CLINC150 screen items (Qwen3.6-35B-A3B GPTQ) "Respond with the code only." moved accuracy by -1 and +4 items, within noise. S2 allows both surfaces of every code; with the mask reflected every allowed first token (codes, the space, each first letter bare and spaced) ranks above the masked ones, so a top-k of that many entries (163 for 77 options, 315 for 150, at most 563 for 255) holds every code's exact logprob in one call.
+In the code scheme (`codes`, used only by `auto_single`), Choice questions above 32 options are labelled `AA`, `AB`, ... (lexicographic), keeping only the codes whose bare and space-prefixed surfaces are each one token for the served model (checked through `/tokenize`, cached per backend: 522 of 676 on Qwen3.6, 588 on Gemma 4). They are listed and asked for like letters (`AB) name`, "Respond with the letter only."), so the templates and every `template_id` are unchanged; on 300 banking77 and 300 CLINC150 screen items (Qwen3.6-35B-A3B GPTQ) "Respond with the code only." moved accuracy by -1 and +4 items, within noise. S2 allows both surfaces of every code; with the mask reflected every allowed first token (codes, the space, each first letter bare and spaced) ranks above the masked ones, so a top-k of that many entries (163 for 77 options, 315 for 150, at most 563 for 255) holds every code's exact logprob in one call.
 
-**Strategies:**
+### Strategies
 
 | ID | Strategy | When | Cost |
 | --- | --- | --- | --- |
 | S1 | First-token letter: renormalize top-k logprobs over labels, merging surface variants | Default, K ≤ 52 | 1 call |
 | S2 | Constrained first-token: same, with `structured_outputs.choice` | Default when the constraint works; exact when the mask is reflected (it is on 0.30.0) | 1 call |
-| S3 | Token trie: chain-rule product along each label's token path; query only branching nodes; prune paths below τ = 1e-4 and report pruned mass | Multi-token labels, K > 52 without echo | Branching nodes (\~1–3) |
+| S3 | Token trie: chain-rule product along each label's token path; query only branching nodes; prune paths below τ = 1e-4 and report pruned mass | Multi-token labels, K > 52 without echo | Branching nodes (\~1 to 3) |
 | S4 | Echo sequence scoring: sum logprobs of each option text; modes `sum` (default), `mean`, `pmi` | Semantic option keys, K up to 255 | K calls, each a full prefill (no prefix cache for prompt logprobs on 0.30.0) |
 | S5 | Explicit-token logprobs | Token ids accepted over HTTP on 0.30.0 (at most 128 per request); adapter path not implemented | 1 call |
 | S6 | Verbalized probabilities (JSON) | Benchmark baseline only; never chosen by `auto` | 1 call |
 
-**Renormalization.** p(label) = exp(ℓ − logsumexp(ℓ over valid labels)), where ℓ is a label's logprob. `observed_mass` is the total valid-label probability before renormalization. If it falls below 0.5 under raw logprobs, emit a warning: the model wanted to write something else.
+Renormalization computes p(label) = exp(ℓ − logsumexp(ℓ over valid labels)), where ℓ is a label's logprob. `observed_mass` is the total valid-label probability before renormalization. If it falls below 0.5 under raw logprobs, emit a warning: the model wanted to write something else.
 
-**Missing labels** (a valid label absent from the top-k list), in order of preference:
+A valid label can be absent from the top-k list. It never gets a silent zero; the fallbacks, in order of preference, are:
 
 1. Re-score via explicit-token logprobs if available.
 2. Otherwise echo-score only the missing labels.
 3. Otherwise assign an upper bound, the smallest returned logprob, and set `truncated=True`.
 
-Never fill in a silent zero.
-
-**Strategy selection (`auto`):**
+### Strategy selection (`auto`)
 
 | Condition | Strategy |
 | --- | --- |
@@ -333,30 +339,36 @@ Never fill in a silent zero.
 
 Every fallback is recorded in diagnostics.
 
-**One call per question (`auto_single`, `SingleCallStrategy`, the recommended strategy):** every question is one model call, and every label is one token. Score, Noul and Choice up to 32 options use S2 as above (letters, digits, `Yes`/`No`). Choice above 32 options uses S2 over the code scheme. Echo and the trie are never used, so a label missing from the top-k gets the upper bound, never an extra call. A question one call cannot score (no reflected mask, too few single-token codes, top-k above the server's cap) raises `CapabilityError`. Diagnostics record `n_backend_calls`, which is 1 for every item, and the reports refuse runs where it is not.
+### One call per question (`auto_single`)
 
-**Multi-call history (before one-call scoring):** the earlier selection and calibration runs used `auto_noecho` (`NoEchoAutoStrategy`): `auto` with echo off, so questions above 32 options (banking77, CLINC150) fell to the S3 trie over the option keys at τ = 1e-3. That took 4.46 and 3.03 calls per item on the Qwen MoEs, and 2.03 and 1.62 on Gemma. On 300 screen items each (Qwen3.6-35B-A3B GPTQ), codes scored 228/300 on banking77 against 226 for the trie, and 257/300 on CLINC150 against 263; the codes held about 0.98 of the probability. Those results are archived and no longer reported.
+`auto_single` (`SingleCallStrategy`) is the recommended strategy. Every question is one model call, and every label is one token. Score, Noul and Choice up to 32 options use S2 as above (letters, digits, `Yes`/`No`). Choice above 32 options uses S2 over the code scheme. Echo and the trie are never used, so a label missing from the top-k gets the upper bound and costs no extra call. A question one call cannot score (no reflected mask, too few single-token codes, top-k above the server's cap) raises `CapabilityError`. Diagnostics record `n_backend_calls`, which is 1 for every item, and the reports refuse runs where it is not.
+
+### Multi-call history
+
+Before one-call scoring, the selection and calibration runs used `auto_noecho` (`NoEchoAutoStrategy`): `auto` with echo off, so questions above 32 options (banking77, CLINC150) fell to the S3 trie over the option keys at τ = 1e-3. That took 4.46 and 3.03 calls per item on the Qwen MoEs, and 2.03 and 1.62 on Gemma. On 300 screen items each (Qwen3.6-35B-A3B GPTQ), codes scored 228/300 on banking77 against 226 for the trie, and 257/300 on CLINC150 against 263; the codes held about 0.98 of the probability. Those results are archived and no longer reported.
 
 ## Debiasing, calibration and confidence
 
 Debiasing runs before calibration, and calibrators are fitted only on held-out folds. The design recommended PriDe plus per-question temperature scaling. The holdout study (`docs/research/calibration.md`) kept the temperature scaling and dropped PriDe:
 
-- **Measured default: no debiaser, `temperature@signature`.** One temperature per question signature takes the selected emulator's macro ECE from 0.067 to 0.035 (Jev: 0.072 to 0.048) and its NLL from 0.750 to 0.688 on the 9 benchmarks without Yelp (one call per question, 17,340 holdout items, cross-fitted). In the multi-call study on the original 10 benchmarks with Yelp (19,840 holdout items) the figures were ECE 0.086 to 0.043 (Jev: 0.078 to 0.047) and NLL 0.767 to 0.692. The deployable registry is `calibration/qwen3.6-27b-int4-quanttrio/registry.json`.
-- **PriDe does not pay off.** Online or with fitted priors, it moves no calibrated macro metric measurably (Δ NLL −0.003 \[−0.008, +0.002\]). Online, it costs 25% more backend calls.
-- **Batch priors and `vector` learn the label mix.** They do better on the benchmarks: in the multi-call study batch priors gave −0.026 NLL after temperature scaling; `vector@signature` gives NLL 0.634 and +0.014 accuracy (one-call run). But they encode the benchmarks' label distributions, and the registry would apply them to every question with the same signature: all Noul questions, and all letter-keyed questions with a given K. Fit them only on labelled traffic of your own question types.
+- The measured default is no debiaser with `temperature@signature`. One temperature per question signature takes the selected emulator's macro ECE from 0.067 to 0.035 (Jev: 0.072 to 0.048) and its NLL from 0.750 to 0.688 on the 9 benchmarks without Yelp (one call per question, 17,340 holdout items, cross-fitted). In the multi-call study on the original 10 benchmarks with Yelp (19,840 holdout items) the figures were ECE 0.086 to 0.043 (Jev: 0.078 to 0.047) and NLL 0.767 to 0.692. The deployable registry is `calibration/qwen3.6-27b-int4-quanttrio/registry.json`.
+- Online or with fitted priors, PriDe moves no calibrated macro metric measurably (Δ NLL −0.003 \[−0.008, +0.002\]). Online, it also costs 25% more backend calls.
+- Batch priors and `vector` learn the label mix, so they do better on the benchmarks: in the multi-call study batch priors gave −0.026 NLL after temperature scaling; `vector@signature` gives NLL 0.634 and +0.014 accuracy (one-call run). But they encode the benchmarks' label distributions, and the registry would apply them to every question with the same signature: all Noul questions, and all letter-keyed questions with a given K. Fit them only on labelled traffic of your own question types.
 
-**Debiasers** (a registry; applied only to the emulator, because Jev is a black box):
+### Debiasers
+
+Debiasers form a registry and apply only to the emulator, because Jev is a black box:
 
 | Name | Method | Extra cost |
 | --- | --- | --- |
-| `permutation` | Average over cyclic shifts of A–D (E stays last) | ×K calls |
+| `permutation` | Average over cyclic shifts of A to D (E stays last) | ×K calls |
 | `pride` | PriDe (ICLR 2024): estimate a prior over label tokens by permuting options on a small fraction α of items, then divide it out | ≈ ×(1 + α(K − 1)) |
 | `contextual` | Contextual calibration (ICML 2021): estimate label bias with a content-free state such as "N/A" and divide it out | +1 call per question template |
 | `batch` | Use the batch-mean distribution as the prior | None |
 
 Reports list "emulator + debias" as a separate arm, never as the default emulator.
 
-**Calibrators:**
+### Calibrators
 
 ```python
 class Calibrator(Protocol):
@@ -372,7 +384,9 @@ class Calibrator(Protocol):
 - The registry keys calibrators by (backend, model, template hash, question signature), falling back to one temperature per (model, template).
 - Jev reports probabilities to two decimals and returns exact zeros, so its logits are log(clip(p, ε, 1)) with ε = 1e-4. The emulator uses the same ε.
 
-**Confidence functions** (pluggable `ConfidenceFn`):
+### Confidence functions
+
+Confidence functions are pluggable (`ConfidenceFn`):
 
 - `mode_distance` (default): 1 − E\[d(X, mode)\] / (the same spread for a uniform distribution), clipped to \[0, 1\]. For Choice, `d` is 0/1 and the function equals `peak_linear`; for Score, `d` is the distance between levels. Fitted to 18,206 real Jev answers (mean absolute error 0.0045 on holdout, `docs/research/calibration.md`).
 - `peak_linear`: (K·p\_max − 1)/(K − 1), clipped to \[0, 1\]; Jev's documented approximation.
@@ -384,20 +398,18 @@ Jev's `confidence` measures how peaked the distribution is, not the probability 
 
 The Jev client pins the model version, caches every response, and records latency and cost. Every run can then be replayed offline, and each request is paid for only once.
 
-- **Transport.** `httpx.AsyncClient`, Bearer key from `TYPESAFE_API_KEY`.
-- **Version pin.** Always send `model="jev-1.13.0"`, never an alias. Assert `response.model == "jev-1.13.0"` and raise `JevVersionDrift` otherwise.
-- **Resilience.** Retry 429/529 with exponential backoff and jitter, honoring `retry-after`. A token bucket keeps requests at or below 1,200/min.
-- **Cache.** Keyed by sha256(canonical request JSON + model ID), stored as SQLite/JSONL, and read before any network call.
-- **Accounting.** Log client-measured wall-clock latency (monotonic clock), `usage.input_tokens`, and cost = input\_tokens × $0.042 / 1M.
-- **Nondeterminism probe.** Re-query 5% of requests three times with the cache bypassed and report the maximum |Δp|.
-- **Budget guard.** `--max-usd` aborts before the budget is exceeded. A full GPQA-Diamond pass costs well under one cent, so the rate limit is the real constraint.
-- **Compatibility.** An optional adapter uses the official `typesafe-sdk` when installed.
+- Transport is `httpx.AsyncClient`, with the Bearer key from `TYPESAFE_API_KEY`.
+- The client always sends `model="jev-1.13.0"`, never an alias. It asserts `response.model == "jev-1.13.0"` and raises `JevVersionDrift` otherwise.
+- It retries 429/529 with exponential backoff and jitter, honoring `retry-after`. A token bucket keeps requests at or below 1,200/min.
+- The cache is keyed by sha256(canonical request JSON + model ID), stored as SQLite/JSONL, and read before any network call.
+- It logs client-measured wall-clock latency (monotonic clock), `usage.input_tokens`, and cost = input\_tokens × $0.042 / 1M.
+- A nondeterminism probe re-queries 5% of requests three times with the cache bypassed and reports the maximum |Δp|.
+- `--max-usd` aborts before the budget is exceeded. A full GPQA-Diamond pass costs well under one cent, so the rate limit binds long before the budget does.
+- An optional adapter uses the official `typesafe-sdk` when installed.
 
 ## Paired comparison harness and evaluate-idk integration
 
-Jev and the emulator answer identical question objects, and one code path scores both. The comparison is fair only if the rules below hold; `compare()` enforces them.
-
-**Fairness rules:**
+Jev and the emulator answer identical question objects, and one code path scores both. The comparison is fair only if these rules hold, and `compare()` enforces them:
 
 1. Same frozen question bank, same option order, same seeds, same "I don't know" handling.
 2. No chain-of-thought for either system.
@@ -406,19 +418,21 @@ Jev and the emulator answer identical question objects, and one code path scores
 5. Pin and log the Jev version, the vLLM version and the model revision.
 6. Pre-register the instruction text, the protocols, the fold seeds and the primary metrics before the first Jev call.
 
-**Question bank.** `build_question_bank` loads GPQA-Diamond (198) and LEXam `mcq_4_choices` `test` filtered to English (619).
+### Question bank
+
+`build_question_bank` loads GPQA-Diamond (198) and LEXam `mcq_4_choices` `test` filtered to English (619).
 
 - evaluate-idk pins no dataset revision, so jevemu pins one per dataset and stores the revision and file hash in the bank.
 - The question ID is the dataset's own ID, not lighteval's row index.
 - There are two ordering modes:
-  - `order="per_question"` (default) shuffles A–D with a per-question RNG seeded from (seed, question\_id).
+  - `order="per_question"` (default) shuffles A to D with a per-question RNG seeded from (seed, question\_id).
   - `order="evaluate_idk"` reproduces evaluate-idk's order: one `random.Random(42)` stream per dataset, one `shuffle` per row in dataset order. The base order is the dataset's list for LEXam and [incorrect 1, 2, 3, correct] for GPQA.
 
   Both modes then append E) "I don't know".
 - The bank is written to `bank.jsonl` with the question ID, permutation ID, option order, gold letter and a SHA-256 of the rendered options.
 - With `n_permutations=4` it also emits cyclic shifts for robustness analysis.
 
-**MCQ mapped to a Jev Choice** (identical for both systems):
+A multiple-choice question maps to the same Jev Choice request for both systems:
 
 ```json
 {"state": "<question stem>",
@@ -430,31 +444,35 @@ Jev and the emulator answer identical question objects, and one code path scores
 
 The emulator renders this same request as a prompt without chain-of-thought that ends "Respond with the letter only.", with the assistant prefill `Answer:`.
 
-**Protocols** (all run for both systems):
+### Protocols
+
+Both systems run all three protocols:
 
 | Protocol | Options | Decision rule | Why |
 | --- | --- | --- | --- |
-| P1 IDK-option | A–E | argmax; E = abstain | Mirrors evaluate-idk |
-| P2 Threshold | A–D | answer iff p\_max > 0.5, else abstain | Bayes-optimal under +1 / 0 / −1 scoring (headline protocol) |
-| P3 Hybrid | A–E, renormalized over A–D | P2 rule | Separates "knows it doesn't know" from calibration |
+| P1 IDK-option | A to E | argmax; E = abstain | Mirrors evaluate-idk |
+| P2 Threshold | A to D | answer iff p\_max > 0.5, else abstain | Bayes-optimal under +1 / 0 / −1 scoring (headline protocol) |
+| P3 Hybrid | A to E, renormalized over A to D | P2 rule | Separates "knows it doesn't know" from calibration |
 
-**Metrics** (one implementation):
+### Metrics
+
+One implementation computes every metric for both systems:
 
 - evaluate-idk metrics, re-implemented from its code: `trad_score`, `idk_score`, `idk_freq`, `extract_fail` (always 0 for typed outputs, but reported). A response with no extracted letter scores −1 on `idk_score`, not 0. Per item and over the corpus, `idk_score = 2·trad_score + idk_freq − 1`. Standard errors use ddof = 1, as lighteval does.
 - Primary: Brier and NLL.
 - Secondary: ECE with 10 equal-mass bins, plus a debiased variant.
 - As returned (Jev-style, both systems): NLL, Brier and ECE of the returned probabilities without renormalization, and the ECE of the `confidence` field read as P(the returned answer is correct).
-- Selective prediction: AUROC of confidence for correctness, AURC (area under the risk–coverage curve), risk–coverage curves, and accuracy at 50/80/100% coverage.
+- Selective prediction: AUROC of confidence for correctness, AURC (area under the risk-coverage curve), risk-coverage curves, and accuracy at 50/80/100% coverage.
 - Reliability diagrams with bootstrap bands.
 
-**Splits and statistics:**
+### Splits and statistics
 
 - 5-fold cross-fitting by question ID, stratified by dataset and subject. All permutations of a question stay in one fold.
 - Paired bootstrap over question clusters: 10,000 resamples, fixed seed, 95% confidence intervals (CIs) on every metric difference. BCa (bias-corrected and accelerated) intervals when n ≥ 500. Optionally, refit calibrators inside each resample when n < 500.
 - Exact McNemar test on per-question correctness.
 - A difference whose CI includes zero is reported as "no evidence of a difference".
 
-**Sample size and ECE noise floor:**
+### Sample size and ECE noise floor
 
 | Setting | Items per bin | ECE noise floor |
 | --- | --- | --- |
@@ -464,14 +482,16 @@ The emulator renders this same request as a prompt without chain-of-thought that
 
 Each floor is ≈ 0.36 / √(items per bin), i.e. √(p(1−p) / m) with p(1−p) ≈ 0.13 and m items per bin.
 
-**Sensitivity checks:**
+### Sensitivity checks
 
 - Emulator probabilities rounded to 0.01, as Jev's are.
 - ε sweep {1e-6, 1e-4, 1e-3} for NLL.
 - Variance of p(gold) across cyclic shifts, for both systems.
 - Jev nondeterminism.
 
-**Latency and cost** (both systems, same client machine):
+### Latency and cost
+
+Both systems are measured from the same client machine:
 
 - End-to-end p50/p95/p99 at concurrency 1, 8 and 32.
 - Cost, reported per 1k items and per 1k correct answers (`run_split.py stats`):
@@ -479,14 +499,14 @@ Each floor is ≈ 0.36 / √(items per bin), i.e. √(p(1−p) / m) with p(1−p
   - Token-priced APIs: prices from `jevemu.eval.costs.TOKEN_PRICES`.
   - Emulator: GPU-hours, from the manifest's invocation wall time (server startup excluded), split over items by tokens. GPU-hours convert to $ at an electricity estimate, board watts × $/Wh: 410 W (the RTX 3090's draw while running, observed by the user, not metered per run) and $0.00027/Wh (NJ average), giving $0.1107/GPU-hour for electricity only. An explicit $/GPU-hour overrides this.
 
-**evaluate-idk integration:**
+### evaluate-idk integration
 
-- **(a) Reference and conformance.** evaluate-idk is pinned as a git submodule. Locally, `audit_evaluate_idk.py` imports `custom_tasks.py` by file path at runtime and runs `ExtractiveLetterIdkGrouped.compute` and lighteval's `mean_stderr` on jevemu's outputs. A conformance test requires agreement to 1e-9.
+- (a) For reference and conformance, evaluate-idk is pinned as a git submodule. Locally, `audit_evaluate_idk.py` imports `custom_tasks.py` by file path at runtime and runs `ExtractiveLetterIdkGrouped.compute` and lighteval's `mean_stderr` on jevemu's outputs. A conformance test requires agreement to 1e-9.
   - It runs in a separate environment built from the submodule's `uv.lock`, because the import pulls in lighteval 0.11.0, torch and transformers.
-  - The import has side effects. It reseeds the global `random` to 42. It loads the first `.env` found walking up from the submodule directory (or from the working directory under a debugger or coverage). It fetches litellm's cost map over the network. So the test sets `LITELLM_LOCAL_MODEL_COST_MAP=True`, stubs `dotenv.load_dotenv` before the import (or guarantees no `.env` above the submodule), and runs from an isolated working directory.
+  - The import has side effects: it reseeds the global `random` to 42, loads the first `.env` found walking up from the submodule directory (or from the working directory under a debugger or coverage), and fetches litellm's cost map over the network. So the test sets `LITELLM_LOCAL_MODEL_COST_MAP=True`, stubs `dotenv.load_dotenv` before the import (or guarantees no `.env` above the submodule), and runs from an isolated working directory.
   - jevemu code never uses the global `random`. Nothing from evaluate-idk ships in the jevemu wheel. Ask the author to add a license.
-- **(b) lighteval shim.** `JevemuLightevalModel(LightevalModel)`, loaded as a custom model. `greedy_until` rebuilds a `SystemOneRequest` from each document, calls the Emulator or JevClient, and returns `"Answer: X"`. It writes the full distributions to a sidecar `distributions.jsonl`.
-  - It records a SHA-256 of the rendered options in each `doc.query` and refuses to pair runs whose hashes differ. It does not hash `Doc.choices`, which is always A–E.
+- (b) The lighteval shim is `JevemuLightevalModel(LightevalModel)`, loaded as a custom model. `greedy_until` rebuilds a `SystemOneRequest` from each document, calls the Emulator or JevClient, and returns `"Answer: X"`. It writes the full distributions to a sidecar `distributions.jsonl`.
+  - It records a SHA-256 of the rendered options in each `doc.query` and refuses to pair runs whose hashes differ. It does not hash `Doc.choices`, which is always A to E.
   - It rebuilds options from the pinned dataset row in `evaluate_idk` order, not by splitting `doc.query` on newlines, because some GPQA options span several lines.
   - Run one task per lighteval process: lighteval orders several tasks through a `set`, so the second task's shuffle depends on `PYTHONHASHSEED`.
   - lighteval is pinned to the version in evaluate-idk's `uv.lock` (0.11.0).
@@ -494,9 +514,9 @@ Each floor is ≈ 0.36 / √(items per bin), i.e. √(p(1−p) / m) with p(1−p
 
 ## Benchmark subsystem
 
-`jevemu.bench` runs quality and performance benchmarks for any mix of systems, from one YAML file. It reuses the harness, so benchmark numbers and the Jev comparison come from the same code. Every run is reproducible, resumable and comparable over time.
+`jevemu.bench` runs quality and performance benchmarks for any mix of systems, from one YAML file. It reuses the harness, so benchmark numbers and the Jev comparison come from the same code. Runs are reproducible and resumable, and their results stay comparable over time.
 
-**Benchmark spec and registry:**
+### Benchmark spec and registry
 
 ```python
 @dataclass(frozen=True)
@@ -512,7 +532,9 @@ class BenchmarkSpec:
 def banking77(cfg: BenchConfig) -> Iterable[BenchItem]: ...
 ```
 
-**Built-in benchmarks** (chosen to cover every question type and scoring path):
+### Built-in benchmarks
+
+The built-in benchmarks cover every question type and scoring path:
 
 | Benchmark | Type | Why |
 | --- | --- | --- |
@@ -528,12 +550,12 @@ Each dataset's license is recorded in its spec before the dataset is added. Data
 Adapters use each dataset's labelled test split and keep its row order and text verbatim, with three exceptions:
 
 - BoolQ has no labelled test split, so its validation split stands in.
-- Yelp's test split has 50,000 reviews, so the benchmark is a fixed sample of 1,000 per star rating (5,000 in total, seed 0), a tenth of the Jev cost. Yelp was later dropped from the protocol: its star levels are shown as digits 0-4 and read ambiguously (`DROPPED_DATASETS`).
+- Yelp's test split has 50,000 reviews, so the benchmark is a fixed sample of 1,000 per star rating (5,000 in total, seed 0), a tenth of the Jev cost. Yelp was later dropped from the protocol: its star levels are shown as digits 0 to 4 and read ambiguously (`DROPPED_DATASETS`).
 - CLINC150 drops its 1,000 out-of-scope (`oos`) test queries and the `oos` option. `oos` is a rejection class, so it would test abstention rather than intent recognition, and the IDK benchmarks already cover abstention.
 
 Every benchmark is then halved into `select` and `holdout` (`jevemu.eval.splits`, stratified by subject or gold class). Model and configuration choices use only `select`. Calibrators are fitted, and final numbers reported, on `holdout`.
 
-**Suite config:**
+### Suite config
 
 ```yaml
 suite: core-v1
@@ -557,7 +579,9 @@ sweeps:                           # optional ablation grid over emulator systems
 budget_usd: 5
 ```
 
-**Runner:**
+### Runner
+
+The runner:
 
 - Expands the suite into (benchmark × system × protocol) jobs, with sweeps expanded into extra emulator systems.
 - Runs jobs concurrently, with a semaphore per backend.
@@ -565,23 +589,23 @@ budget_usd: 5
 - Writes `manifest.json` with the jevemu git SHA, suite hash, dataset revisions, vLLM version and flags, model HF revision, Jev model string, hardware, and start/end times.
 - `--dry-run` prints the job count and estimated cost.
 
-**Performance benchmarks (`jevemu bench perf`):**
+### Performance benchmarks (`jevemu bench perf`)
 
-- Load generator: closed loop at concurrency 1, 8, 32 and 128, and open loop at fixed arrival rates for realistic tail latency.
-- Workload shapes: *fan-out* (many questions, one state) and *batch-classify* (one question, many states). These exercise the prefix cache differently.
-- Metrics: end-to-end p50/p95/p99, questions per second, error and retry rate, cost per 1M questions. For vLLM, also the prefix-cache hit rate and GPU memory, scraped from its Prometheus `/metrics` endpoint.
-- Fairness: Jev is capped by its rate limit, so compare latency at matched request rates, not peak throughput.
+- The load generator runs closed loop at concurrency 1, 8, 32 and 128, and open loop at fixed arrival rates for realistic tail latency.
+- There are two workload shapes, which exercise the prefix cache differently: fan-out (many questions, one state) and batch-classify (one question, many states).
+- Metrics are end-to-end p50/p95/p99, questions per second, error and retry rate, and cost per 1M questions. For vLLM they also include the prefix-cache hit rate and GPU memory, scraped from its Prometheus `/metrics` endpoint.
+- Jev is capped by its rate limit, so for fairness compare latency at matched request rates, not peak throughput.
 
-**CLI:**
+### CLI
 
 - `jevemu bench list`: registered benchmarks and systems.
 - `jevemu bench run suite.yaml [--resume RUN_ID] [--dry-run]`: run a suite.
 - `jevemu bench perf perf.yaml`: performance benchmarks.
-- `jevemu bench report RUN_ID`: markdown and HTML report with reliability and risk–coverage plots.
+- `jevemu bench report RUN_ID`: markdown and HTML report with reliability and risk-coverage plots.
 - `jevemu bench compare RUN_A RUN_B`: paired bootstrap on shared question IDs, for regressions across versions or models.
 - `jevemu bench leaderboard runs/`: table across runs.
 
-**Local gates:**
+### Local gates
 
 - A `smoke` suite (\~50 items per benchmark, Qwen3-0.6B) runs locally via `pytest -m cpu` or `-m gpu`.
 - It fails when probabilities don't sum to 1, an answer is outside the label set, or a metric regresses beyond `bench/thresholds.yaml`.
@@ -617,9 +641,9 @@ jevemu/
   docker/vllm/compose.yaml   (pinned vllm/vllm-openai image digest; presets/*.env per model)
 ```
 
-**Tooling:**
+### Tooling
 
-- `uv` for the environment and lockfile. Python 3.10–3.13. `hatchling` build.
+- `uv` for the environment and lockfile. Python 3.10 to 3.13. `hatchling` build.
 - Extras: `jevemu[vllm]` (so the core installs without CUDA), `[bench]`, `[plot]`, `[lighteval]`, `[typesafe]`.
 - Runtime dependencies: `pydantic>=2`, `httpx`, `numpy`, `scipy`, `jinja2`, `tenacity`, `anyio`, `pyarrow`, `pyyaml`, `typer`.
 - Quality: `ruff` (lint and format), `mypy --strict` on `src/`, `pytest` with `pytest-asyncio`, `hypothesis`, `respx`, and `pre-commit`.
@@ -634,10 +658,10 @@ Most correctness is proven without a GPU: a scripted fake backend and recorded f
 | T0 unit | `scripts/check.sh` (every push), no vLLM installed | `FakeBackend` with scripted logprob tables: variant merging, renormalization, observed mass, missing-label policies, trie maths, echo null-first-token and −9999 handling, calibrators on synthetic data with a known T, confidence functions against TypeSafe's worked examples, bootstrap coverage, pydantic round-trips of Jev doc examples, the request builder never emitting `guided_*` |
 | T1 golden | `scripts/check.sh` (every push) | `RecordedBackend` replaying captured vLLM responses (chat first-token, echo, tokenize) and cached Jev responses (keys scrubbed) via `respx`; fixtures carry the vLLM version, image digest and model SHA; a drift test fails on schema change |
 | T2 CPU smoke | Local, opt-in (`-m cpu`) | `vllm serve Qwen/Qwen3-0.6B` on CPU, 20 bank questions, all strategies, the capability probe, benchmark `smoke` suite; asserts validity, not accuracy |
-| T3 GPU | Local, on demand (`-m gpu`) | Full GPQA-Diamond and core benchmark suite with a 7–8B instruct model; performance regression thresholds |
+| T3 GPU | Local, on demand (`-m gpu`) | Full GPQA-Diamond and core benchmark suite with a 7B or 8B instruct model; performance regression thresholds |
 | T4 live Jev | Local, manual (`-m live_jev`), key from env, `--max-usd 1` | 10 requests, version assert, refreshes cache fixtures |
 
-**Property tests (hypothesis):**
+### Property tests (hypothesis)
 
 - Probabilities are non-negative and sum to 1.
 - Permutation ensembles are invariant to input option order.
@@ -646,18 +670,18 @@ Most correctness is proven without a GPU: a scripted fake backend and recorded f
 - The upper-bound missing-mass policy never lifts a missing label above the smallest observed one.
 - Score lies in \[0, K − 1\].
 
-**Metric correctness:** ECE, Brier, NLL and AUROC are cross-checked against scikit-learn and hand-computed cases. The evaluate-idk metrics must match evaluate-idk's own code (as audited) to 1e-9.
+ECE, Brier, NLL and AUROC are cross-checked against scikit-learn and hand-computed cases. The evaluate-idk metrics must match evaluate-idk's own code (as audited) to 1e-9.
 
 ## Recommendations, risks and open questions
 
-**Recommendations:**
+### Recommendations
 
 1. Audit evaluate-idk and probe vLLM's logprob behavior before writing scoring or metric code. These settle the two facts that could invalidate the design.
 2. Make the frozen question bank the single source of truth. Use the lighteval shim only as a conformance check.
 3. Use P2 (threshold at 0.5) as the headline protocol, and rank systems on Brier and NLL. Treat ECE differences below the noise floor as ties.
 4. Evaluate a ladder of model sizes with thinking off, and report each model separately, never one "emulator" number. Measured rungs on the RTX 3090 are below. The smoke run (`scripts/smoke.py`) is LEXam-en, 20 items, seed 0, IDK option, evaluate-idk order. GPQA-Diamond is all 198 items, emulator only. Both use S2 constrained letters, and latency is for one sequential request.
 
-   | Model (preset) | Smoke acc / A–D acc / IDK / p(gold) / median ms | GPQA acc / A–D acc / IDK / p(gold) / median ms |
+   | Model (preset) | Smoke acc / A to D acc / IDK / p(gold) / median ms | GPQA acc / A to D acc / IDK / p(gold) / median ms |
    | --- | --- | --- | --- |
    | Qwen3-0.6B bf16 (`qwen3-0.6b`, smoke tests) | 0.20 / 0.29 / 0.30 / 0.202 / 11 | 0.19 / 0.23 / 0.19 / 0.172 / 11 |
    | Qwen3-4B bf16 | 0.25 / 0.36 / 0.30 / 0.255 / 35 | not run |
@@ -665,7 +689,7 @@ Most correctness is proven without a GPU: a scripted fake backend and recorded f
    | Qwen3.8-27B AWQ INT4 (`qwen3.8-27b-awq`, top rung that fits 24 GB) | 0.40 / 0.40 / 0.00 / 0.269 / 221 | 0.33 / 0.38 / 0.12 / 0.282 / 229 |
    | Jev `jev-1.13.0` (reference) | 0.55 / 0.55 / 0.00 / 0.484 / 138 | not sent |
 
-   The 27B rung is a community 4-bit quant, so treat it as its own model. The Qwen3.5-9B quantization ladder (`docs/research/quantization_report.md`; 817 bank items, compared against the noise from restarting the bf16 server) found no measurable accuracy change at 8 or 4 bits. INT8 stays within restart noise and FP8 just above it. INT4 moves each item's distribution by 6–7× the noise (total variation 0.08–0.09, label logprobs \~0.2 nats), and cyankiwi's INT4 (the 27B's quantizer) also costs +0.05 nats of NLL.
+   The 27B rung is a community 4-bit quant, so treat it as its own model. The Qwen3.5-9B quantization ladder (`docs/research/quantization_report.md`; 817 bank items, compared against the noise from restarting the bf16 server) found no measurable accuracy change at 8 or 4 bits. INT8 stays within restart noise and FP8 just above it. INT4 moves each item's distribution by 6 to 7× the noise (total variation 0.08 to 0.09, label logprobs \~0.2 nats), and cyankiwi's INT4 (the 27B's quantizer) also costs +0.05 nats of NLL.
 5. Default emulator configuration, selected on the `select` half (`docs/research/selection.md` Stage 2), then calibrated and measured on `holdout` (`docs/research/calibration.md`):
    - preset `qwen3.6-27b-int4-quanttrio` (tied with `qwen3.6-27b-int4-cyankiwi`);
    - `state_first` layout (the renderer default; see Prompt layouts for its accuracy gain);
@@ -675,7 +699,7 @@ Most correctness is proven without a GPU: a scripted fake backend and recorded f
 
    Holdout macro accuracy over the 9 benchmarks without Yelp, one call per question: 0.7655, against Jev's 0.8253 (Δ −0.0598 \[−0.0726, −0.0473\], cross-fitted calibration study). Multi-call history: 0.7673 over the 9; with Yelp (10 benchmarks) 0.7512 \[0.7393, 0.7632\] against 0.8097 \[0.7992, 0.8200\].
 
-**Risks:**
+### Risks
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
@@ -684,13 +708,13 @@ Most correctness is proven without a GPU: a scripted fake backend and recorded f
 | vLLM silently drops constraints (`guided_*`) | Invalid scores | Never emit `guided_*`; startup constraint probe. Confirmed: 0.30.0 ignores `guided_*` with only a server-side warning |
 | Unknown pre- vs post-mask logprobs | Wrong renormalization assumptions | Resolved by the probe: post-mask on 0.30.0 in both logprobs modes; re-probed per version (cached) |
 | Top-k truncation with many options | Missing labels | Raise `--max-logprobs`; echo or explicit-token fallback; `truncated` flag. Probed: above the cap vLLM returns HTTP 400, never a shorter list; the adapter clamps to the probed cap |
-| bf16 logprob nondeterminism (prefix-cache hits, batch composition, server restarts) | The same question's logprobs move by \~0.12 nats (max 0.24) between cached and uncached runs, and by up to \~0.16 across concurrent identical requests; this blurs paired comparisons and temperature fits. On Qwen3.8-27B AWQ cache hits are exact and constrained label probabilities move by ≤ 0.03 under batching, but concurrent echo totals move by 0.4–1.0 nats. On Qwen3.5-9B a container restart alone changes 816 of 817 items (KL 0.0009, label logprobs \~0.03 nats), concurrency 16 adds nothing beyond it, and FP8 on Ampere differs even between sequential identical requests | fp32 for small models (noise \~0.005); for larger models, disable prefix caching or repeat and average in reproducibility runs; report the measured noise floor (including a restart) with every comparison |
+| bf16 logprob nondeterminism (prefix-cache hits, batch composition, server restarts) | The same question's logprobs move by \~0.12 nats (max 0.24) between cached and uncached runs, and by up to \~0.16 across concurrent identical requests; this blurs paired comparisons and temperature fits. On Qwen3.8-27B AWQ cache hits are exact and constrained label probabilities move by ≤ 0.03 under batching, but concurrent echo totals move by 0.4 to 1.0 nats. On Qwen3.5-9B a container restart alone changes 816 of 817 items (KL 0.0009, label logprobs \~0.03 nats), concurrency 16 adds nothing beyond it, and FP8 on Ampere differs even between sequential identical requests | fp32 for small models (noise \~0.005); for larger models, disable prefix caching or repeat and average in reproducibility runs; report the measured noise floor (including a restart) with every comparison |
 | Jev alias or version drift | Unrepeatable comparisons | Pin `jev-1.13.0`; assert on every response |
 | Jev's 0.01 precision and exact zeros | Distorted NLL and temperature fits. On `holdout`, 409 of 17,340 Jev answers give the correct option exactly 0, clipped to 1e-6 (13.8 nats each): Jev's raw NLL is inflated, and raw-NLL gaps understate its lead (emulator − Jev +0.047 as scored, about +0.15 with every system floored at 0.005) | ε-clip; compare calibrated NLL (barely affected); `reports/jev_vs_qwen` reports the floored raw NLL |
 | Small n (GPQA-Diamond = 198) | Wide CIs, noisy ECE | Pool datasets; paired bootstrap; Brier/NLL primary |
 | No chain-of-thought | Low absolute GPQA scores | Expected; the comparison targets calibration, not raw accuracy |
 
-**Open questions:**
+### Open questions
 
 - Does Jev use the criteria keys? Do letter keys versus descriptive keys change its answers? Run a small key-naming ablation.
 - Should LEXam's `course` field go into the state for both systems?
@@ -707,7 +731,7 @@ The OpenAI and OpenRouter backends exist (`jevemu.backends.openai_chat`, `jevemu
 | OpenAI | `top_logprobs` ≤ 20 on non-reasoning models | JSON-schema `enum` | No | Reasoning models refuse logprobs; reports of empty logprobs with `json_schema` on GPT-5.1/5.2; `-9999.0` sentinel for missing tokens; no true prefill |
 | llama.cpp | `n_probs` on `/completion`; `post_sampling_probs` for after-sampler probabilities | GBNF grammar, `json_schema` | No | Set `top_k=0`, `min_p=0` to avoid truncation; complex schemas can fail grammar init |
 
-**Sources:**
+### Sources
 
 - [TypeSafe API reference](https://docs.typesafe.ai/api) · [Models](https://docs.typesafe.ai/models) · [Score primitive](https://docs.typesafe.ai/primitives/score) · [Confidence](https://docs.typesafe.ai/confidence) · [Launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 - Independent Jev tests: [jev-ood-calibration](https://github.com/scienthoon/jev-ood-calibration) · [jev-benchmark](https://github.com/themsquared/jev-benchmark) · [dev.to review](https://dev.to/gde/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1kln)

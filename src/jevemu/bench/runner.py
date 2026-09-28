@@ -11,8 +11,9 @@ Layout under ``out_dir``:
 
 Each item is sent as ``SystemOneRequest(state, questions={"answer": question})`` (the question
 banks' request shape, so Jev cache keys match the bank runs). A
-:class:`~jevemu.jev_client.JevClient` is called through ``system_one_with_meta``:
-``latency_ms`` is Jev's recorded HTTP round trip (also for cache hits), ``wall_ms`` this call's
+:class:`~jevemu.jev_client.JevClient` (Jev, or CLM through its subclass
+:class:`~jevemu.clm_client.ClmClient`) is called through ``system_one_with_meta``:
+``latency_ms`` is the recorded HTTP round trip (also for cache hits), ``wall_ms`` this call's
 wall time, and ``cost_usd``/``cached`` come from its accounting. An emulator over a paid API
 (diagnostics carrying :class:`~jevemu.types.ApiUsage`) gets the same fields from that block:
 ``latency_ms`` is the summed HTTP round trips, ``cost_usd`` the spend, ``cached`` whether every

@@ -13125,6 +13125,110 @@
      "tokens_per_question": 143.077548
     }
    }
+  },
+  {
+   "color": "#cf222e",
+   "finalist": null,
+   "group": "Dual encoder",
+   "key": "clm",
+   "kind": "local",
+   "label": "CLM-8B (local)",
+   "note": "A dual encoder, not an emulator: Qwen3-8B embeddings scored by a 20M-parameter head, answering the same wire format as Jev, one RTX 3090",
+   "run": "runs/select/clm",
+   "speed_run": [
+    "runs/select/clm",
+    "screen"
+   ],
+   "views": {
+    "all": {
+     "accuracy": [
+      0.246734,
+      0.231953,
+      0.261942
+     ],
+     "brier_cal": [
+      0.784319,
+      0.77893,
+      0.790028
+     ],
+     "brier_raw": [
+      1.054081,
+      1.033636,
+      1.073996
+     ],
+     "ceiling": null,
+     "cost_per_1k_items": 0.000766,
+     "ece_cal": 0.072955,
+     "ece_raw": 0.3556,
+     "in_flight": [
+      16
+     ],
+     "latency_mean_ms": 392.402652,
+     "latency_p50_ms": 291.845672,
+     "n": 2499,
+     "n_nll_clipped": 9,
+     "nll_cal": [
+      2.111051,
+      2.093459,
+      2.129508
+     ],
+     "nll_raw": [
+      3.747799,
+      3.629423,
+      3.865783
+     ],
+     "qps": 40.129093,
+     "speed_note": "16 questions in flight, vLLM 0.30.0 on one RTX 3090 (24 GB)",
+     "speed_split": "screen",
+     "tokens_in": 99.053221,
+     "tokens_out": 0.0,
+     "tokens_per_question": 99.053221
+    },
+    "common": {
+     "accuracy": [
+      0.322323,
+      0.30229,
+      0.342896
+     ],
+     "brier_cal": [
+      0.70247,
+      0.694338,
+      0.710931
+     ],
+     "brier_raw": [
+      1.070796,
+      1.041468,
+      1.100923
+     ],
+     "ceiling": null,
+     "cost_per_1k_items": 0.000817,
+     "ece_cal": 0.088429,
+     "ece_raw": 0.44673,
+     "in_flight": [
+      16
+     ],
+     "latency_mean_ms": 418.206367,
+     "latency_p50_ms": 323.340465,
+     "n": 1599,
+     "n_nll_clipped": 9,
+     "nll_cal": [
+      1.344994,
+      1.333903,
+      1.356615
+     ],
+     "nll_raw": [
+      3.371411,
+      3.209444,
+      3.53686
+     ],
+     "qps": 37.615404,
+     "speed_note": "16 questions in flight, vLLM 0.30.0 on one RTX 3090 (24 GB)",
+     "speed_split": "screen",
+     "tokens_in": 107.751094,
+     "tokens_out": 0.0,
+     "tokens_per_question": 107.751094
+    }
+   }
   }
  ],
  "pending": [],

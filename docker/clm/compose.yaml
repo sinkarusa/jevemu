@@ -1,0 +1,111 @@
+# Pinned CLM-8B server for jevemu (client jevemu.clm_client.ClmClient, run_split.py --system clm).
+#
+#   scripts/serve_clm.sh                                    # up -d, then wait for /health
+#   docker compose -f docker/clm/compose.yaml up -d
+#   docker compose -f docker/clm/compose.yaml down
+#
+# CLM-8B (https://github.com/Contrastive-LM/CLM, Apache-2.0) is a dual encoder: Qwen3-8B served by
+# vLLM as a pooling model ("encoder", reachable only inside this project on port 8090) and a 20M
+# parameter projection head served by clm-serve ("clm", published on JEVEMU_CLM_PORT, default
+# 8700), which answers POST /v1/systemone in the TypeSafe wire format.
+#
+# Every pin here is mirrored by the constants in src/jevemu/clm_client.py, which run manifests
+# record; change both together. clm reuses the vLLM image (it has torch, fastapi, uvicorn and
+# huggingface_hub) and installs the pinned contrastive-lm wheel at start with --no-deps and its
+# sha256. It downloads the pinned head into the shared HF cache, checks the file's sha256 and
+# serves it only under clm-v0.1-8b-<first 12 hex of that sha256>, so a different head can never
+# answer under the pinned name (and never match its response cache entries). --no-download keeps
+# clm-serve from fetching its unpinned default head (clm-latest).
+# The encoder flags follow the upstream README and serve_qwen3_8b.sh (last-token pooling, prefix
+# caching, 2048-token limit, which clm-serve's --max-tokens matches). Its memory share,
+# JEVEMU_CLM_ENCODER_GPU_MEMORY_UTILIZATION (default 0.8 of a 24 GiB GPU), leaves room for the
+# head and its vector cache (--action-cache, 2% of the GPU by default).
+name: jevemu-clm
+
+services:
+  encoder:
+    image: vllm/vllm-openai:v0.30.0@sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90
+    ipc: host
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+    command:
+      - Qwen/Qwen3-8B
+      - --revision=b968826d9c46dd6066d109eabc6255188de91218
+      - --served-model-name=qwen3-8b
+      - --runner=pooling
+      - --enable-prefix-caching
+      - --max-model-len=2048
+      - --gpu-memory-utilization=${JEVEMU_CLM_ENCODER_GPU_MEMORY_UTILIZATION:-0.8}
+      - --port=8090
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:8090/health', timeout=4)
+      interval: 10s
+      timeout: 5s
+      retries: 90
+      start_period: 60s
+
+  clm:
+    image: vllm/vllm-openai:v0.30.0@sha256:8a69ffad015f138d7170c4ddc429e230a3bc1c1719f67e14324749df200a4b90
+    depends_on:
+      encoder:
+        condition: service_healthy
+    ports:
+      - "${JEVEMU_CLM_PORT:-8700}:8700"
+    volumes:
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      CLM_API_KEY: ${CLM_API_KEY:-}
+      JEVEMU_CLM_PACKAGE: contrastive-lm==0.1.0
+      JEVEMU_CLM_PACKAGE_WHEEL_SHA256: 7f3eed12d3aa10173f71bac7e50fc387565b485a2a2fc4c4323af32b1950055f
+      JEVEMU_CLM_HEAD_REPO: Contrastive-LM/CLM-v0.1-8B
+      JEVEMU_CLM_HEAD_REVISION: e939398d4556fcd9400c76fa8c5a513202f42b0a
+      JEVEMU_CLM_HEAD_FILE: CLM_v0.1-8B.pt
+      JEVEMU_CLM_HEAD_SHA256: b2b4a8c9c2d39263eff78a351eb909a342ce9b3bf21a3f07c1d1bf15f1c4eda5
+    # "$$" is a literal "$" for the container shell (compose would interpolate "$").
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        echo "$$JEVEMU_CLM_PACKAGE --hash=sha256:$$JEVEMU_CLM_PACKAGE_WHEEL_SHA256" \
+          > /tmp/clm-requirements.txt
+        pip install --quiet --no-deps --require-hashes --only-binary=:all: \
+          --root-user-action=ignore --disable-pip-version-check -r /tmp/clm-requirements.txt
+        head="$$(python3 -c 'import os; from huggingface_hub import hf_hub_download as get; e = os.environ; print(get(e["JEVEMU_CLM_HEAD_REPO"], e["JEVEMU_CLM_HEAD_FILE"], revision=e["JEVEMU_CLM_HEAD_REVISION"]))')"
+        echo "$$JEVEMU_CLM_HEAD_SHA256  $$head" | sha256sum -c -
+        name="clm-v0.1-8b-$$(echo "$$JEVEMU_CLM_HEAD_SHA256" | cut -c1-12)"
+        set -- --host=0.0.0.0 --port=8700 --no-ui --no-download --device=cuda \
+          --emb-url=http://encoder:8090/v1/embeddings --emb-model=qwen3-8b --max-tokens=2048 \
+          --model="$$name=$$head"
+        echo "clm-serve $$*"
+        exec clm-serve "$$@"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - import json, urllib.request; assert json.load(urllib.request.urlopen('http://localhost:8700/health', timeout=4))['embedder']
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s

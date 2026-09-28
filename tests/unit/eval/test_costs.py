@@ -158,6 +158,7 @@ def test_price_book_resolution_and_gpu_rate_precedence(monkeypatch: pytest.Monke
         GpuTimePrice.from_power(-1.0, 0.0002)
     assert book.resolve({"kind": "emulator", "backend_model": "Qwen/Qwen3.6-27B"}) is book.gpu
     assert book.resolve({"kind": "jev", "model": "jev-1.13.0"}) is JEV_1_13_0
+    assert book.resolve({"kind": "clm", "model": "clm-v0.1-8b-b2b4a8c9c2d3"}) is book.gpu
     luna_batch = {"kind": "openai", "model": "gpt-6-luna", "price_id": "gpt-6-luna:batch"}
     assert book.resolve(luna_batch) is GPT_6_LUNA_BATCH
     assert book.resolve({"kind": "jev", "model": "jev-9.9.9"}) is None

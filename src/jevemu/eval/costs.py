@@ -6,9 +6,9 @@ Two kinds of price:
   rate multiplier (Batch/Flex processing) and a long-context tier (a request with more input
   tokens than the threshold pays multiplied input/cache and output rates for the whole request).
   :data:`TOKEN_PRICES` holds the built-in entries, each with its source and as-of date.
-- :class:`GpuTimePrice`, for the local vLLM server: $ per GPU-hour. An explicit rate
-  (``run_split.py stats --gpu-usd-per-hour`` or :data:`GPU_USD_PER_HOUR_ENV`) wins; otherwise
-  the rate is an electricity estimate, average board power x electricity price
+- :class:`GpuTimePrice`, for local GPU systems (the vLLM emulator, CLM): $ per GPU-hour. An
+  explicit rate (``run_split.py stats --gpu-usd-per-hour`` or :data:`GPU_USD_PER_HOUR_ENV`)
+  wins; otherwise the rate is an electricity estimate, average board power x electricity price
   (:meth:`GpuTimePrice.from_power`, W x $/Wh = $/h). Its defaults: :data:`DEFAULT_GPU_WATTS`
   (the RTX 3090 draws about 410 W while vLLM serves a run, as observed by the user) and
   :data:`DEFAULT_USD_PER_WH` ($0.00027/Wh = $0.27/kWh, New Jersey average), $0.1107 per GPU-hour.
@@ -18,8 +18,9 @@ Two kinds of price:
 :meth:`PriceBook.resolve` picks a run's price from its manifest's ``system``: a run with a
 ``price_id`` (an emulator over a paid API, such as ``gpt-6-luna``) is token-priced by the book's
 entry for it, else by the ``token_price`` the run recorded (OpenRouter's price snapshot, the
-:class:`TokenPrice` fields); any other ``kind == "emulator"`` run is time-priced; anything else
-(Jev) is looked up by ``system["model"]`` in the book's token prices.
+:class:`TokenPrice` fields); any other run of a kind in :data:`GPU_TIME_KINDS` (the emulator,
+CLM) is time-priced; anything else (Jev) is looked up by ``system["model"]`` in the book's token
+prices.
 
 Item costs (:func:`item_costs`, one records file at a time):
 
@@ -34,12 +35,13 @@ Item costs (:func:`item_costs`, one records file at a time):
   cost 0) is costed at the table price, so replaying a cache does not make a system look
   cheaper. An item without usage (a failed call) costs 0.
 - **Time-priced.** A records file's GPU time is the summed wall time of the manifest
-  invocations that wrote it (each one's ``started_at`` to ``finished_at``). That excludes vLLM
-  server startup and any idle time between runs, and assumes nothing else ran on the GPU
-  meanwhile. Records do not say which invocation wrote them, so the file's total is split over
-  all its items in proportion to input + output tokens. An item without usage gets the mean
-  weight of the items with usage (equal weights if none has any), so the items' shares always
-  sum to the file's GPU time.
+  invocations that wrote it (each one's ``started_at`` to ``finished_at``). That excludes server
+  startup and any idle time between runs, and assumes nothing else ran on the GPU meanwhile.
+  Records do not say which invocation wrote them, so the file's total is split over all its
+  items in proportion to input + output tokens. An item without usage gets the mean weight of
+  the items with usage (equal weights if none has any), so the items' shares always sum to the
+  file's GPU time. Items CLM answered from its response cache (``cached``) took no GPU time, so
+  a run replayed from that cache is cheaper than a fresh one.
 """
 
 from __future__ import annotations
@@ -63,6 +65,7 @@ __all__ = [
     "GPT_6_LUNA",
     "GPT_6_LUNA_BATCH",
     "GPT_6_LUNA_FLEX",
+    "GPU_TIME_KINDS",
     "GPU_USD_PER_HOUR_ENV",
     "GPU_WATTS_ENV",
     "JEV_1_13_0",
@@ -91,6 +94,8 @@ DEFAULT_USD_PER_WH = 0.00027
 """Placeholder: $0.27 per kWh, the New Jersey average electricity price (user estimate)."""
 MISMATCH_TOLERANCE = 0.01
 """Relative difference between a recorded charge and the price table that gets flagged."""
+GPU_TIME_KINDS = frozenset({"emulator", "clm"})
+"""Manifest ``system["kind"]`` values of local GPU systems, priced by GPU time."""
 
 _PER_MTOK = 1e-6
 
@@ -304,7 +309,7 @@ class PriceBook:
             if price is None and isinstance(recorded, Mapping):
                 price = TokenPrice(**recorded)
             return price
-        if system.get("kind") == "emulator":
+        if system.get("kind") in GPU_TIME_KINDS:
             return self.gpu
         model = system.get("model")
         return self.token_prices.get(model) if isinstance(model, str) else None

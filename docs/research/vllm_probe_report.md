@@ -2,10 +2,10 @@
 
 This probe checks what the pinned vLLM 0.30.0 server returns for logprob scoring, first on
 `Qwen/Qwen3-0.6B` and then on the Qwen3.8-27B AWQ INT4 preset. Everything the adapter needs
-works: constrained decoding is enforced, the returned logprobs are already renormalized over the
-allowed tokens, the top-logprob cap is a hard 64, and assistant prefill is honored. Two findings
-change the design: echo requests never read the prefix cache, and reported logprobs move with
-batch composition (and, on Qwen3-0.6B in bf16, with prefix-cache hits).
+works: the server enforces constrained decoding, the returned logprobs are already renormalized
+over the allowed tokens, the top-logprob cap is a hard 64, and assistant prefill is honored. Two
+findings change the design: echo requests never read the prefix cache, and reported logprobs
+move with batch composition (and, on Qwen3-0.6B in bf16, with prefix-cache hits).
 
 Measured on 2026-09-24 with `scripts/probe_vllm.py` against the pinned Docker server. The probe
 answers the design risk "Unknown pre- vs post-mask logprobs" and the open question about
@@ -38,10 +38,10 @@ The probe ran three times: the primary launch above, the same launch with
 
 | Probe | Result (primary run) | processed_logprobs | float32 |
 | --- | --- | --- | --- |
-| a. Constraint enforced | **Yes.** `choice=["Q","Z"]` on a "which is a fruit, A or B" prompt generated `"Z"`; unconstrained greedy token was `" **"` | Yes | Yes |
-| b. Mask reflected in logprobs | **Yes.** Constrained top-64: only `"A"`/`"B"` finite, 62/64 entries at the -9999 floor, allowed mass 1.000000 | Yes (identical values) | Yes |
-| c. `--max-logprobs 64` | `top_logprobs=64` → HTTP 200 with 64 entries; `65` → **HTTP 400** `Requested sample logprobs of 65, which is greater than max allowed: 64 (parameter=logprobs, value=65)`. No silent truncation | same | same |
-| d. Label tokens | `A..Z`, `a..z`, `Yes`, `No`: one token bare and with a leading space. `0..9`: one token bare, **two tokens with a leading space** (`" 0"` = `[220, 15]`) | — | — |
+| a. Constraint enforced | Yes. `choice=["Q","Z"]` on a "which is a fruit, A or B" prompt generated `"Z"`; unconstrained greedy token was `" **"` | Yes | Yes |
+| b. Mask reflected in logprobs | Yes. Constrained top-64: only `"A"`/`"B"` finite, 62/64 entries at the -9999 floor, allowed mass 1.000000 | Yes (identical values) | Yes |
+| c. `--max-logprobs 64` | `top_logprobs=64` → HTTP 200 with 64 entries; `65` → HTTP 400 `Requested sample logprobs of 65, which is greater than max allowed: 64 (parameter=logprobs, value=65)`. No silent truncation | same | same |
+| d. Label tokens | `A..Z`, `a..z`, `Yes`, `No`: one token bare and with a leading space. `0..9`: one token bare, two tokens with a leading space (`" 0"` = `[220, 15]`) | — | — |
 | e. Echo | `max_tokens=0` accepted, no generated token appended; first prompt logprob `null`; an identical second echo request reported `cached_tokens=0` | same | same |
 | f. Prefill | Honored. `/tokenize` render ends `…assistant\n<think>\n\n</think>\n\nThe capital of France is`; chat `prompt_tokens` = `/tokenize` count = 24 | same | same |
 | Prefix cache | Enabled (metrics); a repeated chat prompt reported `cached_tokens=32` of 46 | same | same |
@@ -67,12 +67,12 @@ the reported logprobs are already renormalized over the allowed tokens. With gre
 (`temperature=0`), `processed_logprobs` returns the same numbers. Masked tokens still fill the
 top-k list at the -9999 floor; the adapter maps them to `-inf`.
 
-What this means for scoring: under S2 the constrained distribution is exact (mass 1 over the
-allowed first tokens). But a constrained call's `observed_mass` is then always about 1, so it
-says nothing about what the model wanted. The unconstrained call above puts only
-exp(-1.408) + exp(-10.283) ≈ 0.24 on letter tokens, because the model wants to write markdown
-`**B**`. S1 on this model would therefore fire the `observed_mass < 0.5` warning. Measuring the
-unconstrained mass needs a second call.
+Under S2 the constrained distribution is exact (mass 1 over the allowed first tokens). A
+constrained call's `observed_mass` is then always about 1, though, so it says nothing about what
+the model wanted. The unconstrained call above puts only exp(-1.408) + exp(-10.283) ≈ 0.24 on
+letter tokens, because the model wants to write markdown `**B**`. S1 on this model would
+therefore fire the `observed_mass < 0.5` warning. Measuring the unconstrained mass needs a
+second call.
 
 ### d. Label tokenization
 
@@ -92,7 +92,7 @@ Bare ids: `A..Z` = 32..57, `a..z` = 64..89, `0..9` = 15..24, `Yes` = 9454, `No` 
   the continuation always follows the chat-template prefix.
 - No -9999 values appeared in echo responses. The floor was seen only for masked tokens in
   constrained chat top-k lists.
-- **Echo never reads the prefix cache.** vLLM 0.30.0 sets `skip_reading_prefix_cache` for any
+- Echo never reads the prefix cache. vLLM 0.30.0 sets `skip_reading_prefix_cache` for any
   request with prompt logprobs (`SamplingParams`: "the output of prompt logprobs may be less than
   n_prompt_tokens"). An identical repeat confirmed it (`cached_tokens=0`). So the design's "one
   request per option shares a cached prefix" does not hold: S4 costs K full prefills, one per
@@ -110,7 +110,7 @@ In bf16, reported logprobs depend on prefix-cache hits and on batch composition:
 | --- | --- | --- |
 | Echo vs first-token logprob of `" Paris"` on a fresh prompt | 0.0 | 2.4e-07 |
 | Same prompt uncached vs cached (probe, 48 cached tokens), max \|Δ\| over top-20 | 0.125 | 0.005 |
-| 20 prompts (55–187 tokens, 48–176 cached), max \|Δ\| per prompt: median / max | 0.128 / 0.242 | 0.0045 / 0.010 |
+| 20 prompts (55 to 187 tokens, 48 to 176 cached), max \|Δ\| per prompt: median / max | 0.128 / 0.242 | 0.0045 / 0.010 |
 | 16 concurrent identical chat requests, spread of the top-1 logprob (3 prompts) | 0.061, 0.076, 0.027 | 0.0006, 0.0030, 0.0035 |
 | 8 concurrent identical echo requests, spread of the total (3 prompts) | 0.156, 0.054, 0.029 | 0.0020, 0.0008, 0.0052 |
 
@@ -118,13 +118,13 @@ Sequential repeats of a cached request are bit-identical. The probe's own 16-way
 0.0009 (bf16), because all copies hit the cache the same way; the dedicated runs above are the
 better estimate.
 
-Implications:
+What follows from this:
 
 - A question's probabilities can move by about 0.1 nat depending on what else is in flight or
   cached. That matters for paired comparisons and temperature fits at n ≈ 200.
-- `--dtype float32` cuts the noise about 25× and fits Qwen3-0.6B easily. It does not fit a 7–8B
-  model on 24 GB. Larger models need either the noise accounted for, or prefix caching disabled
-  for reproducibility runs (batch noise remains).
+- `--dtype float32` cuts the noise about 25× and fits Qwen3-0.6B easily. It does not fit a 7B
+  or 8B model on 24 GB. Larger models need either the noise accounted for, or prefix caching
+  disabled for reproducibility runs (batch noise remains).
 
 ## Adapter decisions driven by these results
 
@@ -132,8 +132,8 @@ Implications:
   Verified live: the same prompt with `guided_choice=["Q","Z"]` returned HTTP 200 and `" **"`,
   and the server logged "Request contains the removed guided-decoding field(s)
   ['guided_choice'], which are ignored; output will NOT be constrained."
-- `top_logprobs` is clamped to the probed cap. Going over the cap is an HTTP 400, not a silent
-  truncation.
+- `top_logprobs` is clamped to the probed cap. A request over the cap gets HTTP 400; the server
+  does not truncate the list silently.
 - Token ids: logprobs return either text or `"token_id:N"` placeholders
   (`return_tokens_as_token_ids`), never both. The completions top-k is a map, and keyed by text
   it keeps only one of several tokens that decode alike: Gemma 4's byte tokens (`<0x41>` next
@@ -175,11 +175,11 @@ Measured on 2026-09-24/25 against `scripts/serve_vllm.sh --preset qwen3.8-27b-aw
 | Launch | `vllm serve cyankiwi/Qwen3.8-27B-AWQ-INT4 --revision=6e134bae… --max-logprobs=64 --logprobs-mode=raw_logprobs --enable-prefix-caching --enable-prompt-tokens-details --max-model-len=8192 --seed=0 --dtype=auto --gpu-memory-utilization=0.95 --default-chat-template-kwargs={"enable_thinking":false} --language-model-only --max-num-seqs=16 --max-num-batched-tokens=1024` |
 | Discovered (`/metrics`) | `block_size=784` (attention pages sized to the Mamba state), `mamba_cache_mode=align`, `mamba_ssm_cache_dtype=float32`, `num_gpu_blocks=27`, `cache_dtype=auto`, `max_model_len=8192` |
 | Memory | Weights 18.37 GiB (text only); KV cache 1.33 GiB = 13,010 tokens (1.59 requests of 8,192 tokens); CUDA graphs 0.2 GiB. `nvidia-smi`: 20.7 GiB right after start, 22.2 GiB peak during 4 concurrent 4,877-token echo requests, 23.6 GiB held by the allocator after a stress run (3 × 7,731-token echo + 24 echo + 16 chat requests at once: no errors) |
-| Startup | 126 s from `serve_vllm.sh` to healthy (weight loading 11–15 s, torch.compile 24 s, profiling/warm-up 41 s, graph capture 6 s) |
+| Startup | 126 s from `serve_vllm.sh` to healthy (weight loading 11 to 15 s, torch.compile 24 s, profiling/warm-up 41 s, graph capture 6 s) |
 
-Fit: at `--gpu-memory-utilization 0.93` the server failed to start. It had 0.85 GiB for the KV
-cache, and one 8,192-token request needs 0.81 GiB plus Mamba pages (estimated maximum length
-7,840). 0.95 serves the full 8,192.
+At `--gpu-memory-utilization 0.93` the server failed to start. It had 0.85 GiB for the KV cache,
+and one 8,192-token request needs 0.81 GiB plus Mamba pages (estimated maximum length 7,840).
+At 0.95 it serves the full 8,192.
 
 `--max-num-batched-tokens 1024` bounds the memory spike from echo's prompt logprobs. vLLM
 computes full-vocabulary logits and log-softmax for every prompt token in the chunk
@@ -195,7 +195,7 @@ The GPU is headless; a display would need a lower utilization and a shorter `--m
 | c. `--max-logprobs 64` | 64 → HTTP 200 with 64 entries; 65 → HTTP 400 | Same |
 | d. Label tokens | `A..Z`, `a..z`, `Yes`, `No`: one token bare and spaced; `0..9`: one token bare, two spaced (`" 7"` = `[220, 22]`). Bare ids `A..Z` = 32..57, `a..z` = 64..89, `0..9` = 15..24 (as Qwen3); `Yes` 9175, `No` 2665; spaced `" A"` 357, `" a"` 264, `" Yes"` 7179, `" No"` 2233; `" "` = 220 | Same single-token pattern, so the same reading plans (digits after the gap) |
 | e. Echo | `max_tokens=0` accepted, first logprob `null`; echo never reads the prefix cache (identical 2,477-token echo repeated: `cached_tokens` 0 both times) but writes it (a following chat request: 2,352 cached) | Same |
-| f. Prefill | Honored: render ends `…assistant\n<think>\n\n</think>\n\nThe capital of France is`, `/tokenize` 24 = chat 24 tokens. **The template trims the final assistant message**: `Answer: ` renders exactly like `Answer:` | 0.6B keeps the trailing space |
+| f. Prefill | Honored: render ends `…assistant\n<think>\n\n</think>\n\nThe capital of France is`, `/tokenize` 24 = chat 24 tokens. The template trims the final assistant message: `Answer: ` renders exactly like `Answer:` | 0.6B keeps the trailing space |
 | Thinking | Server default `{"enable_thinking":false}` applies to chat and `/tokenize`: the decoded render keeps the system message as sent (no reasoning instruction) and ends in an empty `<think>\n\n</think>` block. A request override `enable_thinking=true` prepends "Reasoning effort is set to xhigh. …" to the system message (38 → 76 tokens), so the default is required | 0.6B's template renders the empty think block for a prefill either way |
 | Prefix cache | Enabled, in 784-token blocks: prompts under 784 tokens never hit (the probe's short repeat: `cached_tokens=0`); repeats of 1,278 / 2,480 / 4,879-token prompts hit 784 / 2,352 / 4,704 | 0.6B caches 16-token blocks (32 of 46) |
 | Explicit token ids | `logprob_token_ids` supported (`" B"` -0.0081, `"B"` -8.383, `"A"` -19.02) | Same |
@@ -203,19 +203,19 @@ The GPU is headless; a display would need a lower utilization and a shorter `--m
 Measured capabilities are identical to Qwen3-0.6B's (`top_logprobs_max=64`, constraint enforced,
 mask reflected, echo, prefill, prefix caching).
 
-**Score prefill.** Before the adapter fix, every Score first-token read (S1/S2/S3) on this model
-saw the trimmed `…Answer:` and read the bare digit there, which is the distortion the design
-avoids. Reads now happen after the true `Answer: ` gap. Over 10 Score prompts (5 questions × 2
-layouts), they match echo of `" d"` within 0.016 (`question_first`) / 0.007 (`state_first`) per
-level. The trimmed read was off by up to 0.08 / 0.175 (review 0–9, `state_first`: `7` 0.461 vs
-0.286 by echo).
+Before the adapter fix, every Score first-token read (S1/S2/S3) on this model saw the trimmed
+`…Answer:` prefill and read the bare digit there, which is the distortion the design avoids.
+Reads now happen after the true `Answer: ` gap. Over 10 Score prompts (5 questions × 2 layouts),
+they match echo of `" d"` within 0.016 (`question_first`) / 0.007 (`state_first`) per level. The
+trimmed read was off by up to 0.08 / 0.175 (review 0 to 9, `state_first`: `7` 0.461 vs 0.286 by
+echo).
 
 Determinism (same measurements as the Qwen3-0.6B table; prompts are unique per run):
 
 | Measurement | Qwen3.8-27B AWQ | Qwen3-0.6B bf16 |
 | --- | --- | --- |
 | Echo vs first-token logprob of `" Paris"`, fresh prompt | 4.8e-07 | 0.0 |
-| Uncached vs cached, 12 prompts (1,878–5,172 tokens, 1,568–4,704 cached), max \|Δ\| over top-20: median / max | 0.0000 / 0.0000 | 0.128 / 0.242 |
+| Uncached vs cached, 12 prompts (1,878 to 5,172 tokens, 1,568 to 4,704 cached), max \|Δ\| over top-20: median / max | 0.0000 / 0.0000 | 0.128 / 0.242 |
 | 16 concurrent identical chat requests, spread of the top-1 logprob (3 prompts) | 0.0014, 0.0022, 0.0091 | 0.061, 0.076, 0.027 |
 | 16 concurrent identical constrained requests, 4-option questions with split answers: max \|Δp\| of a label | 0.031, 0.028, 0.0002 | — |
 | 8 concurrent identical echo requests, spread of the last-5-token total (3 prompts) | 0.42, 1.00, 0.36 | 0.156, 0.054, 0.029 |
@@ -227,7 +227,7 @@ model.
 
 Echo is the noisy path. The large per-token moves are on tokens far in the tail (logprob below
 about -10). S4 sends its K option requests concurrently, so echo scores on this model carry about
-0.1–1 nat of batch noise per option. First-token strategies (the default S2) move by at most
+0.1 to 1 nat of batch noise per option. First-token strategies (the default S2) move by at most
 about 0.03 in probability.
 
 ## Gemma 4 26B-A4B (AWQ INT4, preset `gemma-4-26b-a4b-int4-cyankiwi`)
@@ -254,11 +254,11 @@ Determinism (the probe's own measurements; `probe.py` `DeterminismProbe`):
 | --- | --- | --- | --- | --- |
 | Echo vs first-token logprob of `" Paris"`, fresh prompt | 3.0e-06 | 0.0 | 0.124 | 0.249 |
 | Repeat of the first-token request: cached tokens, max \|Δ\| over shared top-k | 32, 0.125 | 0, 0.0 | 0, 0.248 | 0, 0.313 |
-| 16 concurrent identical requests, spread of the top-1 logprob | **0.117** | 0.011 | 0.0066 | 0.0044 |
+| 16 concurrent identical requests, spread of the top-1 logprob | 0.117 | 0.011 | 0.0066 | 0.0044 |
 
-The batch spread is 10-27x the other presets'. So on this model a question's probabilities move
-more with what else is in flight [INFERENCE: batch-dependent Marlin MoE kernels; not isolated].
-Echo and uncached first-token logprobs agree (gap 3.0e-06).
+The batch spread is 10 to 27 times the other presets'. So on this model a question's
+probabilities move more with what else is in flight [INFERENCE: batch-dependent Marlin MoE
+kernels; not isolated]. Echo and uncached first-token logprobs agree (gap 3.0e-06).
 
 ## Reproduce
 

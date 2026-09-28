@@ -1,19 +1,17 @@
 # Quantization report: Qwen3.5-9B bf16 vs FP8, INT8 and INT4
 
-This report tests whether serving Qwen3.5-9B quantized (FP8, INT8 or INT4) changes the
-emulator's accuracy or its reported probabilities by more than the bf16 model's own run-to-run
-noise. Accuracy does not change measurably at any bit width. 8-bit keeps probabilities at or near
-the noise floor. Both 4-bit builds move each item's probabilities well beyond it, and
-cyankiwi's INT4, the scheme of the 27B preset, also costs log-likelihood.
+This report tests whether serving Qwen3.5-9B quantized (FP8, INT8 or INT4) changes (a) the
+emulator's accuracy or (b) the label probabilities and logprobs it reports by more than the bf16
+model's own run-to-run noise. Accuracy does not change measurably at any bit width. 8-bit keeps
+probabilities at or near the noise floor. Both 4-bit builds move each item's probabilities well
+beyond it, and cyankiwi's INT4, the scheme of the 27B preset, also costs log-likelihood.
 
-Measured on 2026-09-25 with `scripts/quant_compare.py` (vLLM 0.30.0, RTX 3090). The question:
-does serving a quantized checkpoint change (a) the emulator's accuracy or (b) the label
-probabilities and logprobs it reports, by more than the bf16 model's own run-to-run noise?
+Measured on 2026-09-25 with `scripts/quant_compare.py` (vLLM 0.30.0, RTX 3090).
 
-Why the 9B: the top rung of the model ladder, Qwen3.8-27B, only fits a 24 GB GPU as a community
-INT4 quant (`qwen3.8-27b-awq`); its bf16 weights (51.7 GiB) cannot be served here. Qwen3.5-9B has
-the same hybrid architecture (Gated DeltaNet plus gated attention, 248k vocabulary) and its bf16
-checkpoint fits, so its quantization ladder stands in for the 27B's.
+The tests use the 9B because the top rung of the model ladder, Qwen3.8-27B, only fits a 24 GB
+GPU as a community INT4 quant (`qwen3.8-27b-awq`); its bf16 weights (51.7 GiB) cannot be served
+here. Qwen3.5-9B has the same hybrid architecture (Gated DeltaNet plus gated attention, 248k
+vocabulary) and its bf16 checkpoint fits, so its quantization ladder stands in for the 27B's.
 
 ## Conclusion
 
@@ -29,85 +27,90 @@ ECE is expected calibration error, and Brier is the Brier score (see Metrics bel
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | floor: `bf16-restart` | −0.002 [−0.013, +0.005] | +0.001 [−0.002, +0.004] | 0.0009 | 0.014 | 0.007 | 0.031 | 0.969 |
 | `int8` | +0.007 [−0.004, +0.017] | −0.001 [−0.004, +0.003] | 0.0011 | 0.016 | 0.008 | 0.037 | 0.957 |
-| `fp8` | −0.002 [−0.018, +0.011] | **+0.006 [+0.001, +0.011]** | 0.0024 | 0.026 | 0.012 | 0.060 | 0.928 |
+| `fp8` | −0.002 [−0.018, +0.011] | +0.006 [+0.001, +0.011] | 0.0024 | 0.026 | 0.012 | 0.060 | 0.928 |
 | `int4-quanttrio` | −0.006 [−0.032, +0.018] | −0.007 [−0.021, +0.008] | 0.021 | 0.081 | 0.039 | 0.191 | 0.750 |
-| `int4-cyankiwi` | −0.012 [−0.037, +0.010] | **+0.052 [+0.035, +0.069]** | 0.030 | 0.091 | 0.043 | 0.216 | 0.781 |
+| `int4-cyankiwi` | −0.012 [−0.037, +0.010] | +0.052 [+0.035, +0.069] | 0.030 | 0.091 | 0.043 | 0.216 | 0.781 |
 
-1. **Accuracy: no measurable change at any bit width.** For every quantized run, the 95%
+1. Accuracy does not change measurably at any bit width. For every quantized run, the 95%
    interval of the accuracy difference includes zero on every slice (both banks, each bank,
    echo). QuantTrio's echo interval just touches zero: +0.061 [0, +0.121]. No McNemar test
-   reaches p < 0.05. The resolution is about ±2-3 points. Qwen3.5-9B without chain-of-thought is
-   close to chance here (accuracy 0.28, mean p(gold) 0.255), so these banks cannot detect small
-   accuracy losses. Noise alone can look significant: the concurrency-16 bf16 run gains +0.025
-   [+0.005, +0.051] on GPQA (5 items gained, 0 lost).
-2. **8-bit: probabilities stay at or near the noise floor.** INT8 (W8A16, Marlin) cannot be told
+   reaches p < 0.05. The resolution is about ±2 to 3 points. Qwen3.5-9B without chain-of-thought
+   is close to chance here (accuracy 0.28, mean p(gold) 0.255), so these banks cannot detect
+   small accuracy losses. Noise alone can look significant: the concurrency-16 bf16 run gains
+   +0.025 [+0.005, +0.051] on GPQA (5 items gained, 0 lost).
+2. At 8 bits, probabilities stay at or near the noise floor. INT8 (W8A16, Marlin) cannot be told
    apart from a bf16 restart on any probability metric, nor on NLL and Brier. FP8 moves
-   probabilities about 2-3x the floor (KL 0.0024 vs 0.0009), with a small but significant NLL
-   increase (+0.006 nats, 0.4%). On this Ampere GPU FP8 runs weight-only, and its kernel is not
-   deterministic (below).
-3. **4-bit: probabilities move well beyond noise; accuracy does not.** Both INT4 checkpoints
-   move each item's distribution by 6-7x the floor in TV (0.08-0.09) and 23-33x in KL. They move
-   the raw label logprobs by about 0.2 nats (floor 0.03). The top answer flips on 22-27% of items
-   (floor 3%). On the Jev doc examples, a Score's expected value moves by 0.10 on average (up to
-   0.49 for QuantTrio and 0.61 for cyankiwi; floor 0.009, up to 0.026). A Noul's P(yes) moves by
-   0.03-0.05 (up to 0.10 and 0.22; floor 0.002).
-4. **QuantTrio's INT4 is the closer one.**
-   - Against bf16 it has lower KL than cyankiwi's (0.021 vs 0.030 on both banks; 0.019 vs 0.042
+   probabilities about 2 to 3 times as much as the floor does (KL 0.0024 vs 0.0009), with a small
+   but significant NLL increase (+0.006 nats, 0.4%). On this Ampere GPU FP8 runs weight-only, and
+   its kernel is not deterministic (below).
+3. At 4 bits, probabilities move well beyond noise while accuracy still does not. Both INT4
+   checkpoints move each item's distribution by 6 to 7 times the floor in TV (0.08 to 0.09) and
+   by 23 to 33 times in KL. They move the raw label logprobs by about 0.2 nats (floor 0.03). The
+   top answer flips on 22 to 27% of items (floor 3%). On the Jev doc examples, a Score's expected
+   value moves by 0.10 on average (up to 0.49 for QuantTrio and 0.61 for cyankiwi; floor 0.009,
+   up to 0.026). A Noul's P(yes) moves by 0.03 to 0.05 (up to 0.10 and 0.22; floor 0.002).
+4. Of the two INT4 builds, QuantTrio's is closer to bf16.
+   - It has lower KL against bf16 than cyankiwi's (0.021 vs 0.030 on both banks; 0.019 vs 0.042
      on GPQA), lower TV and raw-logprob error, and no proper-score cost (NLL −0.007 [−0.021,
      +0.008], Brier −0.001).
    - cyankiwi's INT4 is significantly worse in NLL (+0.052, 3.5%) and Brier (+0.017 [+0.009,
      +0.025]), and more overconfident on GPQA (mean top probability 0.421 vs 0.397, ECE 0.133 vs
      0.097).
-   - What each quantizes: QuantTrio keeps attention, DeltaNet and layer 0 in bf16 (only MLPs are
-     4-bit, group 128). cyankiwi also quantizes attention and most DeltaNet projections (group
-     32).
+   - QuantTrio keeps attention, DeltaNet and layer 0 in bf16 and quantizes only the MLPs (4-bit,
+     group 128). cyankiwi also quantizes attention and most DeltaNet projections (group 32).
    - QuantTrio's checkpoint makes vLLM run in fp16. Served with bf16 activations
-     (`int4-quanttrio-bf16`) it measures the same (KL 0.0216 vs 0.0214), so the difference is the
-     weights.
-   - QuantTrio flips slightly more top answers (0.750 vs 0.781 agreement): its per-item
-     perturbations are unbiased, not smaller on every item.
-5. **What this means for the 27B-AWQ emulator [INFERENCE].** `qwen3.8-27b-awq` uses cyankiwi's
-   scheme (compressed-tensors W4A16, group 32, Marlin). If the 27B responds like the 9B, its
-   aggregate accuracy is within a few points of bf16 Qwen3.8-27B. But each question's
-   probabilities differ from bf16's by roughly 0.1 in TV and 0.2 nats per label logprob, with a
-   small systematic NLL penalty. So: use its accuracy as representative, calibrate on its own
-   outputs (calibrators are fitted per model anyway), and never read its per-item probabilities
-   as bf16 Qwen3.8-27B's. Larger models usually lose less to 4-bit weights, so the 9B gap is
-   plausibly an upper bound; this was not measured. On the same 817 items the 27B-AWQ rung is
-   the stronger model (accuracy 0.368 vs 0.284 for 9B bf16, NLL 1.452 vs 1.475, ECE 0.044 vs
-   0.100), so its 4-bit perturbation does not erase the size gain.
+     (`int4-quanttrio-bf16`) it measures the same (KL 0.0216 vs 0.0214), so the difference comes
+     from the weights.
+   - QuantTrio flips slightly more top answers (0.750 vs 0.781 agreement). Its per-item
+     perturbations are unbiased, but they are not smaller on every item.
+5. The 27B-AWQ emulator [INFERENCE]: `qwen3.8-27b-awq` uses cyankiwi's scheme
+   (compressed-tensors W4A16, group 32, Marlin). If the 27B responds like the 9B, its aggregate
+   accuracy is within a few points of bf16 Qwen3.8-27B. But each question's probabilities differ
+   from bf16's by roughly 0.1 in TV and 0.2 nats per label logprob, with a small systematic NLL
+   penalty. So use its accuracy as representative, calibrate on its own outputs (calibrators are
+   fitted per model anyway), and never read its per-item probabilities as bf16 Qwen3.8-27B's.
+   Larger models usually lose less to 4-bit weights, so the 9B gap is plausibly an upper bound;
+   this was not measured. On the same 817 items the 27B-AWQ rung is the stronger model (accuracy
+   0.368 vs 0.284 for 9B bf16, NLL 1.452 vs 1.475, ECE 0.044 vs 0.100), so its 4-bit perturbation
+   does not erase the size gain.
 
-**Noise-floor findings.** These hold for any comparison on this stack, not only quantization.
+### Noise-floor findings
 
-- **A container restart alone changes almost every item.** Two bf16 servers with identical
-  flags agree bit-for-bit on 1 of 817 items (KL 0.0009, TV 0.014, raw logprob MAE 0.03 nats, 3%
-  of top answers flipped). FP8 did the same (first attempt vs rerun: 3 of 817 identical, KL
-  0.0009, TV 0.013). Within one server, 8 sequential repeats of the same constrained and echo
-  request (5 LEXam items) were bit-identical on bf16, so the variation is fixed at startup. The
-  likely cause is autotuned Triton kernels picking different tile configurations per process:
-  the Gated DeltaNet prefill uses flash-linear-attention ops decorated with `triton.autotune`
-  [INFERENCE]. Concurrency 16 adds no more than a restart does.
-- **FP8 on Ampere is not repeatable within a server.** The same 8 sequential repeats gave 8
-  distinct results (constrained top-20 logprobs spread up to 0.125 nats, echo up to 0.10). In
-  the runs, this shows up as echo's five per-option requests for one item disagreeing: only 13%
-  of FP8 items stay on the logit grid below, against 98-100% for the other runs at concurrency 1
-  (the fp16 QuantTrio run on its own, finer grid).
-- **Label logprob differences lie on the bf16 logit grid.** Under S2, for 99-100% of items in
-  every 9B run with bf16 activations, the differences between label logprobs are multiples of
-  0.125 nats (the bf16 spacing of logits between 16 and 32). So probabilities move in discrete
-  steps. The fp16 QuantTrio run sits on a 1/64-nat grid instead.
+These apply to any comparison on this stack, whether or not it involves quantization.
 
-**Serving notes.** All five 9B checkpoints loaded on the first try with the shared flags, with no
-kernel fallbacks beyond FP8's weight-only path. Load facts per run are in the setup table below.
-The `qwen3.8-27b-awq` preset lacks `--generation-config=vllm`, so vLLM warns that the
-checkpoint's `temperature=1.0, top_k=20, top_p=0.95` replace its sampling defaults. The
-emulator's numbers are unaffected: it sends `temperature=0` and reads `raw_logprobs`, which are
-taken before top-k/top-p.
+- A container restart alone changes almost every item. Two bf16 servers with identical flags
+  agree bit-for-bit on 1 of 817 items (KL 0.0009, TV 0.014, raw logprob MAE 0.03 nats, 3% of top
+  answers flipped). FP8 did the same (first attempt vs rerun: 3 of 817 identical, KL 0.0009, TV
+  0.013). Within one server, 8 sequential repeats of the same constrained and echo request (5
+  LEXam items) were bit-identical on bf16, so the variation is fixed at startup. The likely cause
+  is autotuned Triton kernels picking different tile configurations per process: the Gated
+  DeltaNet prefill uses flash-linear-attention ops decorated with `triton.autotune` [INFERENCE].
+  Concurrency 16 adds no more than a restart does.
+- FP8 on Ampere is not repeatable within a server. The same 8 sequential repeats gave 8 distinct
+  results (constrained top-20 logprobs spread up to 0.125 nats, echo up to 0.10). In the runs,
+  this shows up as echo's five per-option requests for one item disagreeing: only 13% of FP8
+  items stay on the logit grid below, against 98 to 100% for the other runs at concurrency 1 (the
+  fp16 QuantTrio run on its own, finer grid).
+- Label logprob differences lie on the bf16 logit grid. Under S2, for 99 to 100% of items in every
+  9B run with bf16 activations, the differences between label logprobs are multiples of 0.125
+  nats (the bf16 spacing of logits between 16 and 32). So probabilities move in discrete steps.
+  The fp16 QuantTrio run sits on a 1/64-nat grid instead.
+
+### Serving notes
+
+All five 9B checkpoints loaded on the first try with the shared flags, with no kernel fallbacks
+beyond FP8's weight-only path. Load facts per run are in the setup table below. The
+`qwen3.8-27b-awq` preset lacks `--generation-config=vllm`, so vLLM warns that the checkpoint's
+`temperature=1.0, top_k=20, top_p=0.95` replace its sampling defaults. The emulator's numbers are
+unaffected: it sends `temperature=0` and reads `raw_logprobs`, which are taken before
+top-k/top-p.
 
 ## Method
 
-**Checkpoints** (all Qwen3.5-9B with the same chat template; prompt token counts are identical
-to `bf16` on every item; revisions pinned in `docker/vllm/presets/qwen3.5-9b-*.env`):
+### Checkpoints
+
+All runs use Qwen3.5-9B with the same chat template, and prompt token counts are identical to
+`bf16` on every item. Revisions are pinned in `docker/vllm/presets/qwen3.5-9b-*.env`.
 
 | Run | Checkpoint | Format | Quantized | Kept in bf16 | Snapshot |
 | --- | --- | --- | --- | --- | --- |
@@ -128,8 +131,10 @@ The FP8 linear kernel is not logged. In vLLM 0.30.0 the first CUDA candidate for
 ahead of Marlin, and Marlin's "weight-only FP8" warning never appears. So the FP8 run used
 Humming [INFERENCE from the image's source].
 
-**Protocol.** Each run gets a new container, so every run starts with an empty prefix cache. The
-emulator (unrounded probabilities, diagnostics on) then answers, in this order:
+### Protocol
+
+Each run gets a new container, so every run starts with an empty prefix cache. The emulator
+(unrounded probabilities, diagnostics on) then answers, in this order:
 
 1. the same 817 bank items (GPQA-Diamond 198 + LEXam-en 619; seed 0, "I don't know" option E,
    evaluate-idk option order) with S2 constrained letters, the default `auto` choice for these
@@ -150,7 +155,9 @@ Qwen3.8's, and the adapter appends the space token. Unlike Qwen3.8's, the Qwen3.
 no reasoning-effort instruction when thinking is on. After an assistant prefill it renders the
 empty think block either way (checked on the bf16 server with `enable_thinking=true`).
 
-**Noise floors.** Two extra bf16 runs show what "no change" looks like:
+### Noise floors
+
+Two extra bf16 runs show what "no change" looks like:
 
 - `bf16-restart` repeats the reference on a new container (same flags, same order,
   concurrency 1).
@@ -161,12 +168,14 @@ A quantization delta matters only if it clears these floors. The within-server r
 above was a separate manual run (`fp8` and `bf16` presets, first 5 LEXam items, 8 sequential
 repeats each of the constrained request and of the echo of `" A"`).
 
-**Metrics** (`src/jevemu/eval/metrics.py`; definitions from the design's "Paired comparison
-harness"):
+### Metrics
+
+Metric code is in `src/jevemu/eval/metrics.py`; the definitions come from the design's "Paired
+comparison harness".
 
 - Accuracy counts E as wrong.
 - NLL = −log max(p(gold), 1e-6).
-- Brier score: multiclass, summed over A-E.
+- Brier score: multiclass, summed over A to E.
 - ECE: top-label, over 10 equal-mass bins (the design default) and 10 equal-width bins.
 - KL(bf16 || run) in nats, after 1e-12 additive smoothing.
 - Total variation.

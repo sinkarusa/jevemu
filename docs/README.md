@@ -10,7 +10,7 @@ Experiments and findings, in the order they were run.
 
 - [research/evaluate_idk_audit.md](research/evaluate_idk_audit.md): code audit of evaluate-idk, a benchmark of whether models say "I don't know" (IDK) when they should. Covers the prompt, shuffle, answer extraction, metrics and datasets that the question bank must match.
 - [research/vllm_probe_report.md](research/vllm_probe_report.md): what the pinned vLLM server does with constrained decoding and logprobs, per model.
-- [research/quantization_report.md](research/quantization_report.md): Qwen3.5-9B in bf16 vs FP8, INT8 and INT4. Does quantization change accuracy or label probabilities by more than run-to-run noise?
+- [research/quantization_report.md](research/quantization_report.md): Qwen3.5-9B in bf16 vs FP8, INT8 and INT4, and whether quantization changes accuracy or label probabilities by more than run-to-run noise.
 - [research/candidates.md](research/candidates.md): which Qwen checkpoints load and answer on one RTX 3090, with memory and startup measurements.
 - [research/selection.md](research/selection.md): choosing the emulator configuration (model, strategy, layout) on the `select` half, with cost and token statistics. Also the API models on the same protocol.
 - [research/calibration.md](research/calibration.md): debiasing, cross-fitted calibrators and Jev's confidence function, measured on `holdout`. Includes the recommended deployment.

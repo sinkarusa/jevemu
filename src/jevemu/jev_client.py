@@ -16,6 +16,10 @@
 The API key is read from the argument or ``TYPESAFE_API_KEY`` and is never logged, stored in
 the cache or records, or included in exception messages. :func:`load_env_file` loads a local
 ``.env`` for scripts and tests.
+
+Other servers of the same wire format reuse the client by overriding its class attributes
+(:attr:`JevClient.service`, ``api_key_env``, ``api_key_required``, ``model_pattern``,
+``usd_per_input_token``): :class:`jevemu.clm_client.ClmClient` drives a local CLM server.
 """
 
 from __future__ import annotations
@@ -34,7 +38,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from types import TracebackType
-from typing import Any
+from typing import Any, ClassVar
 
 import httpx
 from pydantic import BaseModel, ConfigDict, ValidationError
@@ -114,8 +118,8 @@ Clock = Callable[[], float]
 # --- pure helpers ------------------------------------------------------------------------------
 
 
-def cost_usd(input_tokens: int) -> float:
-    return input_tokens * USD_PER_INPUT_TOKEN
+def cost_usd(input_tokens: int, usd_per_input_token: float = USD_PER_INPUT_TOKEN) -> float:
+    return input_tokens * usd_per_input_token
 
 
 def estimate_input_tokens(canonical_request: str) -> int:
@@ -315,12 +319,21 @@ class JevClient:
 
     ``cache=None`` uses the on-disk default (``~/.cache/jevemu/jev_cache.sqlite``); pass
     ``ResponseCache.in_memory()`` to keep nothing on disk. ``max_usd`` caps this client's
-    spend. ``clock``/``sleep`` drive latency measurement, rate limiting and backoff and are
-    injectable for tests and simulation.
+    spend; ``max_rpm=None`` turns the rate limit off. ``clock``/``sleep`` drive latency
+    measurement, rate limiting and backoff and are injectable for tests and simulation.
 
     One ``httpx.AsyncClient`` exists per event loop, so the client survives repeated
     ``asyncio.run`` calls. Use ``async with`` or :meth:`aclose`.
     """
+
+    service: ClassVar[str] = "Jev"
+    """Server name in log lines and error messages."""
+    api_key_env: ClassVar[str] = API_KEY_ENV
+    api_key_required: ClassVar[bool] = True
+    """``False``: without a key, requests go out with no ``Authorization`` header."""
+    model_pattern: ClassVar[re.Pattern[str]] = _VERSIONED_MODEL
+    """The model ids the client may pin (aliases such as ``jev-latest`` do not match)."""
+    usd_per_input_token: ClassVar[float] = USD_PER_INPUT_TOKEN
 
     def __init__(
         self,
@@ -329,7 +342,7 @@ class JevClient:
         model: str = DEFAULT_MODEL,
         base_url: str = DEFAULT_BASE_URL,
         cache: ResponseCache | None = None,
-        max_rpm: int = 1200,
+        max_rpm: int | None = 1200,
         strict_version: bool = True,
         max_usd: float | None = None,
         retry: RetryPolicy | None = None,
@@ -338,25 +351,27 @@ class JevClient:
         clock: Clock = time.monotonic,
         sleep: Sleep = asyncio.sleep,
     ) -> None:
-        if not _VERSIONED_MODEL.fullmatch(model):
-            raise ValueError(f"model must be a versioned Jev id like 'jev-1.13.0', got {model!r}")
-        if max_rpm < 1:
+        if not self.model_pattern.fullmatch(model):
+            raise ValueError(
+                f"model must be a versioned {self.service} id like {DEFAULT_MODEL!r}, got {model!r}"
+            )
+        if max_rpm is not None and max_rpm < 1:
             raise ValueError(f"max_rpm must be >= 1, got {max_rpm}")
         if max_usd is not None and max_usd < 0:
             raise ValueError(f"max_usd must be >= 0, got {max_usd}")
         self.model = model
         self.base_url = base_url.rstrip("/").removesuffix("/v1")
-        self.cache = cache if cache is not None else ResponseCache()
+        self.cache = cache if cache is not None else self._default_cache()
         self.strict_version = strict_version
         self.max_usd = max_usd
         self.retry = retry or RetryPolicy()
         self._owns_cache = cache is None
-        self._api_key = api_key or os.environ.get(API_KEY_ENV) or None
+        self._api_key = api_key or os.environ.get(self.api_key_env) or None
         self._timeout = timeout
         self._transport = transport
         self._clock = clock
         self._sleep = sleep
-        self._bucket = TokenBucket(max_rpm, clock=clock, sleep=sleep)
+        self._bucket = None if max_rpm is None else TokenBucket(max_rpm, clock=clock, sleep=sleep)
         self._rng = random.Random()
         self._spent_usd = 0.0
         self._reserved_usd = 0.0
@@ -367,8 +382,8 @@ class JevClient:
 
     def __repr__(self) -> str:
         return (
-            f"JevClient(model={self.model!r}, base_url={self.base_url!r}, cache={self.cache!r}, "
-            f"max_usd={self.max_usd!r}, spent_usd={self._spent_usd:.6f})"
+            f"{type(self).__name__}(model={self.model!r}, base_url={self.base_url!r}, "
+            f"cache={self.cache!r}, max_usd={self.max_usd!r}, spent_usd={self._spent_usd:.6f})"
         )
 
     @property
@@ -440,10 +455,10 @@ class JevClient:
                     created_at=entry.created_at,
                     request_id=None,
                 )
-                logger.debug("Jev cache hit %s", key[:12])
+                logger.debug("%s cache hit %s", self.service, key[:12])
                 return response, record
 
-        estimate = cost_usd(estimate_input_tokens(payload))
+        estimate = cost_usd(estimate_input_tokens(payload), self.usd_per_input_token)
         self._reserve(estimate)
         try:
             reply = await self._send("POST", SYSTEMONE_PATH, payload)
@@ -451,7 +466,7 @@ class JevClient:
             self._reserved_usd -= estimate
         created_at = datetime.now(timezone.utc)
         self._network_calls += 1
-        call_cost = cost_usd(_billed_tokens(reply.json))
+        call_cost = cost_usd(_billed_tokens(reply.json), self.usd_per_input_token)
         self._spent_usd += call_cost
 
         response = self._validate(reply.json)
@@ -480,7 +495,8 @@ class JevClient:
             request_id=reply.request_id,
         )
         logger.debug(
-            "Jev call %s (%s): %.1f ms, %d attempt(s), %d input tokens, $%.8f",
+            "%s call %s (%s): %.1f ms, %d attempt(s), %d input tokens, $%.8f",
+            self.service,
             key[:12],
             reply.request_id,
             reply.latency_ms,
@@ -500,6 +516,10 @@ class JevClient:
 
     # -- internals --
 
+    def _default_cache(self) -> ResponseCache:
+        """The cache used when ``cache=None`` (closed by :meth:`aclose`)."""
+        return ResponseCache()
+
     def _validate(self, raw: Any) -> SystemOneResponse:
         try:
             response = SystemOneResponse.model_validate(raw)
@@ -507,8 +527,10 @@ class JevClient:
             raise JevResponseError("response is not a valid SystemOneResponse", raw) from exc
         if response.model != self.model:
             if self.strict_version:
-                raise JevVersionDrift(self.model, response.model)
-            logger.warning("Jev answered with model %r, pinned %r", response.model, self.model)
+                raise JevVersionDrift(self.model, response.model, service=self.service)
+            logger.warning(
+                "%s answered with model %r, pinned %r", self.service, response.model, self.model
+            )
         return response
 
     def _reserve(self, estimate: float) -> None:
@@ -520,17 +542,18 @@ class JevClient:
         self._reserved_usd += estimate
 
     def _session(self) -> httpx.AsyncClient:
-        if not self._api_key:
-            raise JevAPIKeyMissing(f"no Jev API key: pass api_key or set {API_KEY_ENV}")
+        if self.api_key_required and not self._api_key:
+            raise JevAPIKeyMissing(
+                f"no {self.service} API key: pass api_key or set {self.api_key_env}"
+            )
         loop = asyncio.get_running_loop()
         if self._client is None or self._loop is not loop:
+            headers = {"Content-Type": "application/json", "Accept": "application/json"}
+            if self._api_key:
+                headers["Authorization"] = f"Bearer {self._api_key}"
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
-                headers={
-                    "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
+                headers=headers,
                 timeout=self._timeout,
                 transport=self._transport,
             )
@@ -542,7 +565,8 @@ class JevClient:
         client = self._session()
         data = content.encode() if content is not None else None
         for attempt in range(1, self.retry.max_attempts + 1):
-            await self._bucket.acquire()
+            if self._bucket is not None:
+                await self._bucket.acquire()
             start = self._clock()
             try:
                 response = await client.request(method, path, content=data)
@@ -566,7 +590,8 @@ class JevClient:
             if error_cls is not None and attempt < self.retry.max_attempts:
                 delay = self.retry.delay(attempt, retry_after, self._rng)
                 logger.warning(
-                    "Jev %s %s returned %d (attempt %d/%d, request %s); retrying in %.2f s",
+                    "%s %s %s returned %d (attempt %d/%d, request %s); retrying in %.2f s",
+                    self.service,
                     method,
                     path,
                     status,

@@ -4,110 +4,109 @@ Sep 25, 2026; current results Sep 27, 2026 (one call per question)
 
 ## In short
 
-All numbers in this list are the current one-call runs
+All numbers in this list come from the current one-call runs
 ([Current results](#current-results-one-call-per-question-holdout)).
 
-- **Accuracy.** On held-out questions the emulator is less accurate than Jev: 0.7655 against
-  0.8253 over 9 benchmarks (Δ −0.0598 [−0.0726, −0.0473]).
-- **Calibration.** Both systems are overconfident on some tasks. One fitted temperature per
-  question signature fixes most of it. After that, the emulator's probabilities are as well
-  calibrated as Jev's (ECE 0.035 against 0.048). The gap that remains in NLL and Brier comes
-  from knowledge, mostly MMLU-Pro and GPQA.
-- **Debiasing.** In the multi-call study PriDe cost 25% more backend calls and gave no
-  measurable gain, so the recommended setup uses no debiaser. No current run has one.
-- **Deployment.** Use the per-signature temperature registry in
+- On held-out questions the emulator is less accurate than Jev: 0.7655 against 0.8253 over 9
+  benchmarks (Δ −0.0598 [−0.0726, −0.0473]).
+- Both systems are overconfident on some tasks, and one fitted temperature per question
+  signature fixes most of it. After that, the emulator's probabilities are as well calibrated
+  as Jev's (ECE 0.035 against 0.048). The gap that remains in NLL and Brier comes from
+  knowledge, mostly MMLU-Pro and GPQA.
+- In the multi-call study PriDe cost 25% more backend calls and gave no measurable gain, so
+  the recommended setup uses no debiaser. No current run has one.
+- For deployment, use the per-signature temperature registry in
   [`calibration/qwen3.6-27b-int4-quanttrio/registry.json`](../../calibration/qwen3.6-27b-int4-quanttrio/registry.json)
   ([Recommended deployment](#recommended-deployment)).
-- **Jev's `confidence` field** is a peakedness score, not a probability. Its formula is now
-  known (`mode_distance`) and is the emulator's default.
-- **Other models.** Before calibration, GPT-6 Luna, Gemma 4 and DeepSeek V4.1 Flash are the
-  most overconfident (ECE 0.168, 0.167 and 0.105 on the 6 benchmarks every system answers,
-  against 0.072 for QuantTrio). After calibration, Luna and DeepSeek still trail the QuantTrio
-  emulator (Brier 0.340 and 0.326 against 0.314 on those 6). The fast MoE emulator gives up
-  0.035 accuracy for 4.4x the throughput (both on `holdout`). Its GPTQ build ties it on
-  accuracy (−0.0039 [−0.0146, +0.0068]) with slightly worse raw probabilities (ECE 0.087
-  against 0.077); after calibration the two are close (ECE 0.042 against 0.037).
-  Gemma 4 26B-A4B, a MoE with 3.8B active parameters, ties the fast emulator on accuracy
-  (+0.0045 [−0.0104, +0.0195]) and is strongly overconfident before calibration (ECE 0.165);
-  one temperature per signature brings its ECE to 0.050 and its NLL level with the fast
-  emulator's.
+- Jev's `confidence` field is a peakedness score, not a probability. Its formula is now known
+  (`mode_distance`) and is the emulator's default.
+- Before calibration, GPT-6 Luna, Gemma 4 and DeepSeek V4.1 Flash are the most overconfident
+  models (ECE 0.168, 0.167 and 0.105 on the 6 benchmarks every system answers, against 0.072
+  for QuantTrio). After calibration, Luna and DeepSeek still trail the QuantTrio emulator
+  (Brier 0.340 and 0.326 against 0.314 on those 6). The fast MoE emulator gives up 0.035
+  accuracy for 4.4x the throughput (both on `holdout`). Its GPTQ build ties it on accuracy
+  (−0.0039 [−0.0146, +0.0068]) with slightly worse raw probabilities (ECE 0.087 against
+  0.077); after calibration the two are close (ECE 0.042 against 0.037). Gemma 4 26B-A4B, a
+  MoE with 3.8B active parameters, ties the fast emulator on accuracy (+0.0045 [−0.0104,
+  +0.0195]) and is strongly overconfident before calibration (ECE 0.165); one temperature per
+  signature brings its ECE to 0.050 and its NLL level with the fast emulator's.
 
-**Yelp is dropped** (Sep 25, 2026, after this study). Its star levels are shown to the models
-as digits 0-4, which are read ambiguously. The headline grids below cover the other 9
+Yelp was dropped on Sep 25, 2026, after this study. Its star levels are shown to the models as
+digits 0 to 4, which are read ambiguously. The headline grids below cover the other 9
 benchmarks (6 for GPT-6 Luna, 7 for DeepSeek V4.1 Flash). The detailed tables after them
 (every calibrator, best arm, per benchmark, debiasing, deployment) were computed with Yelp and
-are kept as recorded. Their Yelp rows and 10-benchmark macro averages are superseded.
+are kept as recorded; their Yelp rows and 10-benchmark macro averages are superseded.
 
-**Scoring changed** (Sep 27, 2026, after this study). Every emulator question is now one model
-call (`auto_single`): letters up to 32 options, single-token two-capital codes above that
-(banking77, CLINC150), instead of the trie
+Scoring changed on Sep 27, 2026, also after this study. Every emulator question is now one
+model call (`auto_single`) instead of the trie: letters up to 32 options, single-token
+two-capital codes above that (banking77, CLINC150)
 ([selection.md](selection.md#scoring-now-one-call-per-question)). The QuantTrio 27B `holdout`
-run is redone without PriDe, and the Gemma 4 runs after the prompt fix. The current results
+run was redone without PriDe, and the Gemma 4 runs after the prompt fix. The current results
 are in [Current results](#current-results-one-call-per-question-holdout). The later sections
-keep the studies as run: multi-call history (before one-call scoring), with `auto_noecho`, the
-27B runs with online PriDe, and Gemma before the prompt fix.
+keep the earlier studies as they were run (the multi-call history): scoring with
+`auto_noecho`, the 27B runs with online PriDe, and Gemma before the prompt fix.
 
 ### Terms
 
-- **`select` / `holdout`.** The two halves of each benchmark. The emulator configuration is
+- `select` and `holdout` are the two halves of each benchmark. The emulator configuration is
   chosen on `select` ([selection.md](selection.md)). Calibration and the final numbers use
   `holdout`, which selection never saw.
-- **Calibration.** A system is calibrated when its probabilities match how often it is right:
-  answers given 0.8 are correct 80% of the time. A *calibrator* remaps probabilities to get
-  there, and is fitted on items with known answers.
-- **NLL** (negative log-likelihood): −log of the probability given to the correct answer,
-  averaged. **Brier score:** squared error between the probability vector and the correct
-  answer. **ECE** (expected calibration error): answers are grouped into bins by their top
-  probability, and ECE averages the gap between that probability and the bin's accuracy. Lower
-  is better for all three.
-- **Signature.** A key for a question's answer space: its type, option count and a hash of the
-  option keys (or score levels), for example `choice:10:4a0bcc85ad6db29b`. Option text is not
-  part of it, so all A–E questions share one signature, across benchmarks.
-- **Calibrators.** *Temperature scaling* divides the log-probabilities by one fitted number T
-  (T > 1 softens an overconfident system); it never changes the top answer. *Vector scaling*
+- A system is calibrated when its probabilities match how often it is right: answers given
+  0.8 are correct 80% of the time. A *calibrator* remaps probabilities to get there, and is
+  fitted on items with known answers.
+- NLL (negative log-likelihood) is −log of the probability given to the correct answer,
+  averaged. The Brier score is the squared error between the probability vector and the
+  correct answer. ECE (expected calibration error) groups answers into bins by their top
+  probability and averages the gap between that probability and the bin's accuracy. Lower is
+  better for all three.
+- A signature is a key for a question's answer space: its type, option count and a hash of
+  the option keys (or score levels), for example `choice:10:4a0bcc85ad6db29b`. Option text is
+  not part of it, so all A to E questions share one signature, across benchmarks.
+- Of the calibrators, *temperature scaling* divides the log-probabilities by one fitted number
+  T (T > 1 softens an overconfident system); it never changes the top answer. *Vector scaling*
   adds a fitted bias per option position, so it can change answers. *Platt*, *isotonic* and
   *histogram* replace the top answer's probability with a fitted estimate of how often it is
   right: a logistic curve, a non-decreasing step function, or per-bin accuracy.
-- **Scope** (`@global`, `@benchmark`, `@signature`): one calibrator overall, per benchmark, or
-  per signature.
-- **Cross-fitting (out of fold).** Items are split into five folds. Each fold is scored with a
+- The scope (`@global`, `@benchmark`, `@signature`) means one calibrator overall, per
+  benchmark, or per signature.
+- Cross-fitting (out of fold) splits the items into five folds. Each fold is scored with a
   calibrator fitted on the other four, so no item is scored by a calibrator that saw it.
-- **Debiasers** remove the model's preference for answer positions (for example, picking A too
+- Debiasers remove the model's preference for answer positions (for example, picking A too
   often). *PriDe* (prior debiasing) estimates that position prior by showing some questions
   with their options rotated, then divides it out. *Batch* divides by the mean prediction over
   a batch.
-- **IDK:** an "I don't know" option. **q/s:** questions per second. **Δ:** a paired difference
+- IDK is an "I don't know" option and q/s is questions per second. Δ is a paired difference
   with its 95% confidence interval in brackets.
 
-## What this page covers
+## Modules and the multi-call result
 
-- **Debiasers** (`jevemu.debias`): remove the emulator's preference for answer positions.
-- **Cross-fitted calibration** (`jevemu.eval.crossfit`, `metrics_calib`, `report`;
-  `scripts/calibrate.py crossfit`): every calibrator is fitted on four folds and scored on the
+- Debiasers (`jevemu.debias`) remove the emulator's preference for answer positions.
+- Cross-fitted calibration (`jevemu.eval.crossfit`, `metrics_calib`, `report`;
+  `scripts/calibrate.py crossfit`) fits every calibrator on four folds and scores it on the
   fifth. Jev and the emulator get the same treatment ("calibrate both or neither").
-- **Jev's confidence function (J3)** (`jevemu.confidence.fit`): Jev's `confidence` is
-  `mode_distance`, now the emulator's default.
+- The fit of Jev's confidence function, J3 (`jevemu.confidence.fit`), found that Jev's
+  `confidence` is `mode_distance`, now the emulator's default.
 
-**Result as recorded** (multi-call history, before one-call scoring; holdout, 19,840 paired
+The result as recorded before one-call scoring (multi-call history; holdout, 19,840 paired
 items, 10 benchmarks including Yelp, macro average):
 
-- **Headline accuracy.** The selected configuration (`qwen3.6-27b-int4-quanttrio`,
-  `state_first`, `auto_noecho`, no debiaser) scores **0.7512 [0.7393, 0.7632]**. Jev scores
-  **0.8097 [0.7992, 0.8200]**. Δ −0.0585 [−0.0703, −0.0468]. Selection never saw these items,
-  so this is the unbiased number (on `select` the gap was −0.060).
-- **Calibration.** Per-signature temperature scaling takes the emulator's ECE from 0.086 to
-  0.043 (Jev: 0.078 to 0.047) and its NLL from 0.767 to 0.692. Calibrated, the emulator's ECE
-  matches Jev's (Δ −0.004). Its NLL is 0.118 [0.102, 0.134] worse and its Brier 0.062
-  [0.054, 0.070] worse. That gap is knowledge (accuracy on MMLU-Pro −0.197, GPQA −0.222).
-- **Deployment.** No debiaser, and a `temperature@signature` registry fitted on the whole
+- On headline accuracy the selected configuration (`qwen3.6-27b-int4-quanttrio`,
+  `state_first`, `auto_noecho`, no debiaser) scores 0.7512 [0.7393, 0.7632] and Jev scores
+  0.8097 [0.7992, 0.8200]: Δ −0.0585 [−0.0703, −0.0468]. Selection never saw these items, so
+  this is the unbiased number (on `select` the gap was −0.060).
+- Per-signature temperature scaling takes the emulator's ECE from 0.086 to 0.043 (Jev: 0.078
+  to 0.047) and its NLL from 0.767 to 0.692. Calibrated, the emulator's ECE matches Jev's
+  (Δ −0.004). Its NLL is 0.118 [0.102, 0.134] worse and its Brier 0.062 [0.054, 0.070] worse.
+  That gap is knowledge (accuracy on MMLU-Pro −0.197, GPQA −0.222).
+- The deployment uses no debiaser and a `temperature@signature` registry fitted on the whole
   holdout run (the file now holds the one-call refit):
   [`calibration/qwen3.6-27b-int4-quanttrio/registry.json`](../../calibration/qwen3.6-27b-int4-quanttrio/registry.json).
   PriDe has no measurable effect (Δ NLL −0.003 [−0.008, +0.002]) and costs 25% more backend
-  calls. Batch priors and `vector@signature` score better on these benchmarks. But they learn
+  calls. Batch priors and `vector@signature` score better on these benchmarks, but they learn
   each benchmark's label mix, and the registry would apply it to every user question with the
   same signature ([Recommended deployment](#recommended-deployment)).
-- **Tied finalist.** `qwen3.6-27b-int4-cyankiwi`, run the same way, also ties QuantTrio on
-  holdout: accuracy −0.0006 [−0.0091, +0.0077], calibrated NLL +0.005 [−0.002, +0.013]
+- The other finalist, `qwen3.6-27b-int4-cyankiwi`, run the same way, ties QuantTrio on
+  holdout too: accuracy −0.0006 [−0.0091, +0.0077], calibrated NLL +0.005 [−0.002, +0.013]
   ([The tied finalist](#the-tied-finalist-cyankiwi)).
 
 Per-item outputs stay in `runs/`.
@@ -115,12 +114,12 @@ Per-item outputs stay in `runs/`.
 ## Current results: one call per question (holdout)
 
 Sep 27, 2026. Every emulator run here uses `auto_single`, `state_first` and no debiaser. The
-grid is the macro average over **9 benchmarks** (Yelp dropped), 17,340 paired items, from the
+grid is the macro average over 9 benchmarks (Yelp dropped), 17,340 paired items, from the
 `holdout_single` study ([Commands](#commands)). "Calibrated" means `temperature@signature`,
 cross-fitted over 5 folds. Calibration does not change accuracy. The cyankiwi row and the
 rows against QuantTrio come from a second study over the same runs plus cyankiwi
-(`--reference quanttrio`, `runs/calibration/holdout_single_vs_quanttrio`), the rows against
-the fast emulator from a third (`runs/calibration/holdout_single_vs_fast`).
+(`--reference quanttrio`, `runs/calibration/holdout_single_vs_quanttrio`), and the rows
+against the fast emulator from a third (`runs/calibration/holdout_single_vs_fast`).
 
 | System | Accuracy | NLL raw | NLL calibrated | Brier raw | Brier calibrated | ECE raw | ECE calibrated |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -149,52 +148,52 @@ Paired differences (a − b, the same items):
 The study renormalizes Jev's probabilities over its options, so its Jev accuracy differs
 slightly from `run_split.py compare` (Emulator − Jev there: -0.0595 [-0.0720, -0.0472]).
 
-**Δ NLL raw against Jev understates Jev's lead.** Jev rounds its probabilities to 0.01. On 409
+Δ NLL raw against Jev understates Jev's lead. Jev rounds its probabilities to 0.01, and on 409
 of the 17,340 items it gives the correct option exactly 0, which NLL clips to 1e-6 (13.8 nats
-each). So Jev's raw NLL is inflated. With every system's probability of the correct answer
+each). That inflates Jev's raw NLL. With every system's probability of the correct answer
 floored at 0.005 (half Jev's rounding step), Emulator − Jev is +0.149 instead of +0.047, and
 Fast − Jev +0.284 instead of +0.197 (`reports/jev_vs_qwen`). Calibrated NLL is barely affected.
 
-**Findings.**
+Findings:
 
-1. **The emulator is as well calibrated as Jev once calibrated, but less accurate.** Its ECE
-   falls from 0.067 to 0.035 (Jev: 0.072 to 0.048). The NLL and Brier gaps come from
+1. Once calibrated, the emulator is as well calibrated as Jev, but it is less accurate. Its
+   ECE falls from 0.067 to 0.035 (Jev: 0.072 to 0.048). The NLL and Brier gaps come from
    knowledge: the emulator scores 0.629 against 0.827 on MMLU-Pro, 0.616 against 0.808 on
    GPQA and 0.651 against 0.702 on LEXam, and is within 0.03 of Jev on the other 6
    benchmarks.
-2. **The two 27B builds are still tied.** No metric separates cyankiwi from QuantTrio.
-   QuantTrio stays the recommendation.
-3. **The MoE builds trail the dense emulator by 0.03-0.04**, and their calibrated NLL by about
-   0.15. The GPTQ build and the fast emulator are tied on every calibrated metric. Gemma is
-   tied with the fast emulator on accuracy and, calibrated, on NLL and Brier; before
+2. The two 27B builds are still tied: no metric separates cyankiwi from QuantTrio. QuantTrio
+   stays the recommendation.
+3. The MoE builds trail the dense emulator by 0.03 to 0.04 in accuracy and by about 0.15 in
+   calibrated NLL. The GPTQ build and the fast emulator are tied on every calibrated metric.
+   Gemma is tied with the fast emulator on accuracy and, calibrated, on NLL and Brier; before
    calibration its NLL is 0.37 worse.
-4. **One-call scoring made the probabilities slightly worse than the multi-call runs.** Against
-   the multi-call grid [below](#jev-and-the-emulator-raw-vs-calibrated-holdout): the emulator's
-   calibrated NLL rose from 0.666 to 0.688 and its gap to Jev from +0.112 to +0.133; the fast
-   emulator's from 0.761 to 0.835 (gap +0.206 → +0.280). Most of this is on banking77 and
-   CLINC150, where the codes replaced the letters
+4. One-call scoring made the probabilities slightly worse than in the multi-call runs.
+   Compared with the multi-call grid [below](#jev-and-the-emulator-raw-vs-calibrated-holdout),
+   the emulator's calibrated NLL rose from 0.666 to 0.688 and its gap to Jev from +0.112 to
+   +0.133. The fast emulator's rose from 0.761 to 0.835 (its gap from +0.206 to +0.280). Most
+   of this is on banking77 and CLINC150, where the codes replaced the letters
    ([selection.md](selection.md#what-one-call-scoring-changed)). Calibrated ECE did not get
-   worse (emulator 0.039 → 0.035, fast 0.037 → 0.037).
-5. **Temperatures.** The fitted global temperature is 1.269 for the emulator (Jev 1.263), 1.292
-   for the fast emulator, 1.325 for GPTQ and 1.681 for Gemma. Per signature, AG News needs the
-   most for the Qwen builds (emulator 2.112, fast 1.948, GPTQ 1.990), SST-5 for Gemma (3.568).
-6. **Best arm:** `vector@signature` for every system (accuracy / NLL): Jev 0.8301 / 0.509,
+   worse: the emulator's went from 0.039 to 0.035 and the fast emulator's stayed at 0.037.
+5. The fitted global temperature is 1.269 for the emulator (Jev 1.263), 1.292 for the fast
+   emulator, 1.325 for GPTQ and 1.681 for Gemma. Per signature, AG News needs the most for the
+   Qwen builds (emulator 2.112, fast 1.948, GPTQ 1.990), and SST-5 for Gemma (3.568).
+6. `vector@signature` is the best arm for every system (accuracy / NLL): Jev 0.8301 / 0.509,
    emulator 0.7792 / 0.634, cyankiwi 0.7757 / 0.635, fast 0.7456 / 0.766, GPTQ 0.7425 /
    0.770, Gemma 0.7481 / 0.764. It learns each benchmark's label mix, so it is not deployed
    ([Recommended deployment](#recommended-deployment)).
-7. **As returned** (Jev-style, not renormalized; NLL / Brier / ECE of the top probability /
-   ECE of `confidence`): Jev 0.7031 / 0.2632 / 0.0719 / 0.0935, emulator 0.7503 / 0.3284 /
-   0.0669 / 0.0802, fast 0.9001 / 0.3751 / 0.0766 / 0.0869, GPTQ 0.9148 / 0.3825 / 0.0874 /
-   0.0910, Gemma 1.2701 / 0.4259 / 0.1646 / 0.1634.
-8. **Hosted models against the one-call emulator** (`run_split.py compare`, holdout, the
-   Structured Outputs runs; their calibration studies below are history on the earlier free
-   read): GPT-6 Luna − QuantTrio -0.0117 [-0.0311, +0.0079] over its 6 benchmarks, raw NLL
-   +0.516; DeepSeek V4.1 Flash − QuantTrio +0.0052 [-0.0118, +0.0223] over its 7 (the 13,547
-   items it answered), raw NLL +0.060. Both are tied with the emulator on accuracy.
+7. As returned (Jev-style, not renormalized), the scores are, as NLL / Brier / ECE of the top
+   probability / ECE of `confidence`: Jev 0.7031 / 0.2632 / 0.0719 / 0.0935, emulator 0.7503 /
+   0.3284 / 0.0669 / 0.0802, fast 0.9001 / 0.3751 / 0.0766 / 0.0869, GPTQ 0.9148 / 0.3825 /
+   0.0874 / 0.0910, Gemma 1.2701 / 0.4259 / 0.1646 / 0.1634.
+8. The hosted models are tied with the one-call emulator on accuracy (`run_split.py compare`,
+   holdout, the Structured Outputs runs; their calibration studies below are history on the
+   earlier free read). GPT-6 Luna − QuantTrio is -0.0117 [-0.0311, +0.0079] over its 6
+   benchmarks, raw NLL +0.516; DeepSeek V4.1 Flash − QuantTrio is +0.0052 [-0.0118, +0.0223]
+   over its 7 (the 13,547 items it answered), raw NLL +0.060.
 
-**Registries.** Each finalist's `temperature@signature` registry is refitted on its one-call
-`holdout` run: 12 signatures each, fallback T 1.269 (QuantTrio), 1.275 (cyankiwi), 1.292
-(fast), 1.325 (GPTQ), 1.681 (Gemma).
+Each finalist's `temperature@signature` registry is refitted on its one-call `holdout` run: 12
+signatures each, fallback T 1.269 (QuantTrio), 1.275 (cyankiwi), 1.292 (fast), 1.325 (GPTQ),
+1.681 (Gemma).
 
 ## Commands
 
@@ -271,32 +270,31 @@ emulator run's four systems, and 604 s with both emulator runs.
 An *arm* is one way of producing final probabilities: `raw`, or a calibrator at a scope, such
 as `temperature@signature`.
 
-- **Items.** Every item that all runs answered. Probabilities are read in the question's key
-  order from the frozen split file and renormalized to sum to 1 (Jev rounds to 0.01). The
-  predicted key is the first one with the highest probability. So on near-tie items, accuracy
+- The study uses every item that all runs answered. Probabilities are read in the question's
+  key order from the frozen split file and renormalized to sum to 1 (Jev rounds to 0.01). The
+  predicted key is the first one with the highest probability, so on near-tie items accuracy
   can differ from `run_split.py summarize`, which scores Jev's reported `choice` (LEXam:
   0.7023 here against 0.6990).
-- **Folds.** Five folds per benchmark, split by question id and stratified by stratum. Within
-  each stratum, question ids are sorted by `sha256(seed, benchmark, question_id)` and dealt
+- Each benchmark has five folds, split by question id and stratified by stratum. Within each
+  stratum, question ids are sorted by `sha256(seed, benchmark, question_id)` and dealt
   round-robin, continuing across strata. All permutations of a question land in the same
   fold. The folds depend only on the split, so every system gets the same folds.
-- **Arms.** `raw` is the probabilities as recorded. Every other arm is out of fold: the
+- The `raw` arm is the probabilities as recorded. Every other arm is out of fold: the
   calibrator for fold *f* is fitted on the other four folds. For both systems the input is
   `log(clip(p, 1e-4, 1))`, so no probability is below the design's floor ε = 1e-4. Where one
-  group mixes option counts, missing options are padded with `-inf`. Scopes:
+  group mixes option counts, missing options are padded with `-inf`. The scopes are:
   - `@global`: one calibrator.
   - `@benchmark`: one per benchmark.
-  - `@signature`: one per question signature, pooled across benchmarks. This is the key the
-    calibrator registry uses. For example, GPQA and LEXam share the A–E signature.
+  - `@signature`: one per question signature, pooled across benchmarks. The calibrator
+    registry uses this key. For example, GPQA and LEXam share the A to E signature.
 
   A group with fewer than 30 training items falls back to the fold's global temperature. The
   calibrators are the registered ones: `identity` (the ε floor only), `temperature`,
   `vector`, `platt`, `isotonic` and `histogram`. The main arm is `temperature@signature`,
   the design's recommendation; it is the "calibrated" column of the 2×2 grid.
-- **Metrics.** NLL is `-log max(p_gold, 1e-6)`. Brier is the multiclass version. ECE uses the
-  top label and 10 bins with equal numbers of items. `metrics.json` holds the reliability
-  bins.
-- **Intervals.** 95% percentile intervals from 10,000 cluster bootstrap resamples (by question
+- NLL is `-log max(p_gold, 1e-6)`. Brier is the multiclass version. ECE uses the top label
+  and 10 bins with equal numbers of items. `metrics.json` holds the reliability bins.
+- Intervals are 95% percentile intervals from 10,000 cluster bootstrap resamples (by question
   id), with a fixed seed. All systems and arms of a benchmark share the resamples, so every Δ
   is paired. The macro average weighs benchmarks equally, and its resamples are stratified by
   benchmark.
@@ -306,7 +304,7 @@ as `temperature@signature`.
   the estimate itself, so `metrics.json` keeps those intervals as rough guides only. The
   design's ECE noise floor is about 0.36/√(items per bin): 0.11 for GPQA (99 items), 0.02 for
   MMLU-Pro.
-- **Offline debiasing** (emulator runs with diagnostics):
+- Offline debiasing applies to emulator runs with diagnostics:
   - `EMU` is the run as recorded (in the multi-call study, with online PriDe).
   - `EMU+none` uses the strategy's raw probabilities: the plain emulator. It is left out when
     it equals `EMU` (a run without a debiaser).
@@ -316,7 +314,7 @@ as `temperature@signature`.
 
   The report's notes say which system is which. A "Debiasing" table gives each debiased
   system minus `EMU+none`, paired.
-- **As returned.** A short section scores each run the way a Jev user sees it:
+- A short "as returned" section scores each run the way a Jev user sees it:
   - NLL, Brier and ECE of the returned probabilities, not renormalized;
   - the ECE of the answers' `confidence` field, read as the probability that the returned
     answer is correct (Choice: `choice`; Score: the most likely level). Noul answers carry
@@ -326,10 +324,10 @@ as `temperature@signature`.
 
 `jev-1.13.0` answered all 19,840 `holdout` items with 0 errors:
 
-- **Time.** 07:26 to 07:43 UTC on Sep 25, 2026, with 16 requests in flight (20 items/s, Jev's
-  rate limit), at jevemu commit `bb7241b`.
-- **Calls.** 19,832 network calls; 8 answers came from the response cache.
-- **Spend: $0.5106**, within the $1.00 cap.
+- It ran from 07:26 to 07:43 UTC on Sep 25, 2026, with 16 requests in flight (20 items/s,
+  Jev's rate limit), at jevemu commit `bb7241b`.
+- It made 19,832 network calls; 8 answers came from the response cache.
+- It spent $0.5106, within the $1.00 cap.
 
 The table comes from `run_split.py summarize`, which scores Jev's reported `choice`. IDK rate
 is how often Jev picked "I don't know". MAE (mean absolute error) and Within-1 apply to the
@@ -359,26 +357,27 @@ accuracy (0.6465 on select), and its confidence interval is about ±0.08 wide.
 The current run uses `auto_single` and no debiaser.*
 
 The selected configuration answered all 19,840 `holdout` items with 0 errors. It ran with
-online PriDe, so one pass also gives the plain emulator and the offline debiasing arms:
+online PriDe, so one pass also gives the plain emulator and the offline debiasing arms.
 
-- **System.** Preset `qwen3.6-27b-int4-quanttrio` (`QuantTrio/Qwen3.6-27B-AWQ` at `9b507bd`,
-  vLLM 0.30.0), template `state_first-5d29289f8b87`, strategy `auto_noecho_tau0.001`,
-  debiaser `pride(alpha=0.1, seed=0, max_options=32)`, confidence `mode_distance`. Run
-  directory `runs/select/qwen3.6-27b-int4-quanttrio.auto_noecho.state_first.pride`.
-- **Time.** 14:11:26 to 16:16:20 UTC on Sep 25, 2026 (2 h 5 min), 16 items in flight, at
-  jevemu commit `89f3aae` plus this change set.
-- **PriDe cost.** 31,903 backend calls, of which 6,460 are PriDe's permuted presentations of
-  1,091 questions (predicted: about 6,500): +25% calls. MMLU-Pro took 2,057 s against 1,121 s
-  without PriDe on `select`.
-- **GPU time: 2 h 15 min** (14:09:30 to 16:24:28 UTC): 1.9 min startup, the run, then 8 min
+- The system was preset `qwen3.6-27b-int4-quanttrio` (`QuantTrio/Qwen3.6-27B-AWQ` at
+  `9b507bd`, vLLM 0.30.0), template `state_first-5d29289f8b87`, strategy
+  `auto_noecho_tau0.001`, debiaser `pride(alpha=0.1, seed=0, max_options=32)`, confidence
+  `mode_distance`, in run directory
+  `runs/select/qwen3.6-27b-int4-quanttrio.auto_noecho.state_first.pride`.
+- It ran from 14:11:26 to 16:16:20 UTC on Sep 25, 2026 (2 h 5 min), with 16 items in flight,
+  at jevemu commit `89f3aae` plus this change set.
+- PriDe added 25% to the calls: of 31,903 backend calls, 6,460 are PriDe's permuted
+  presentations of 1,091 questions (predicted: about 6,500). MMLU-Pro took 2,057 s against
+  1,121 s without PriDe on `select`.
+- GPU time was 2 h 15 min (14:09:30 to 16:24:28 UTC): 1.9 min startup, the run, then 8 min
   of an idle server while the study, the deployment registry and the smoke test ran. Before
   that, 1 min of Qwen3-0.6B re-recorded the emulator golden fixtures for the new defaults.
 
 `run_split.py summarize` scores the recorded answers, which are online PriDe's: macro accuracy
 0.7498 [0.7376, 0.7618], NLL 0.762. The tables below use these systems:
 
-- `emulator`: the plain emulator (`quanttrio+none`, the strategy's probabilities). This is
-  the configuration selection chose.
+- `emulator`: the plain emulator (`quanttrio+none`, the strategy's probabilities), the
+  configuration selection chose.
 - `+PriDe online`: as recorded.
 - `+PriDe offline`, `+batch`: priors fitted out of fold.
 
@@ -387,7 +386,7 @@ online PriDe, so one pass also gives the plain emulator and the offline debiasin
 *Multi-call history (before one-call scoring): the emulator row is the `auto_noecho` run. The
 current grid is in [Current results](#current-results-one-call-per-question-holdout).*
 
-The 2×2 grid below is the macro average over **9 benchmarks (Yelp dropped)**, 17,340 paired
+The 2×2 grid below is the macro average over 9 benchmarks (Yelp dropped), 17,340 paired
 items. "Calibrated" means `temperature@signature`. Calibration does not change accuracy.
 Command: `scripts/calibrate.py crossfit ... --debias none --out runs/calibration/holdout_noyelp`
 (the loaders now skip Yelp).
@@ -401,11 +400,12 @@ Command: `scripts/calibrate.py crossfit ... --debias none --out runs/calibration
 | *Emulator, with Yelp (10, superseded)* | 0.7512 [0.7393, 0.7632] | 0.767 [0.741, 0.793] | 0.692 [0.670, 0.715] | -0.075 [-0.082, -0.068] | 0.352 [0.339, 0.363] | 0.335 [0.324, 0.346] | -0.016 [-0.018, -0.015] | 0.086 | 0.043 | -0.043 |
 | *Emulator − Jev, with Yelp* | -0.0585 [-0.0703, -0.0468] | +0.040 [+0.016, +0.064] | +0.118 [+0.102, +0.134] | | +0.068 [+0.059, +0.076] | +0.062 [+0.054, +0.070] | | +0.008 | -0.004 | |
 
-Dropping Yelp barely moves the accuracy gap (-0.0585 → -0.0580). It narrows the calibrated NLL
-gap (+0.118 → +0.112), and the emulator's calibrated ECE goes from 0.043 to 0.039.
+Dropping Yelp barely moves the accuracy gap (from -0.0585 to -0.0580). It narrows the
+calibrated NLL gap from +0.118 to +0.112, and the emulator's calibrated ECE goes from 0.043 to
+0.039.
 
-**From here until "GPT-6 Luna on holdout", the tables are the 10-benchmark study (with Yelp)
-as recorded.**
+From here until "GPT-6 Luna on holdout", the tables are the 10-benchmark study (with Yelp) as
+recorded.
 
 Every calibrator, macro average. Jev:
 
@@ -465,7 +465,7 @@ Per benchmark, Jev against the emulator. Accuracy is raw; NLL and Brier are cali
 | yelp_stars | 2500 | 0.6692 | 0.6064 | -0.0628 [-0.0800, -0.0456] | 0.754 | 0.926 | +0.172 [+0.151, +0.194] | 0.435 | 0.512 | 0.134 | 0.041 | 0.224 | 0.077 |
 | **macro** | 19840 | 0.8097 | 0.7512 | -0.0585 [-0.0703, -0.0468] | 0.575 | 0.692 | +0.118 [+0.102, +0.134] | 0.273 | 0.335 | 0.078 | 0.047 | 0.086 | 0.043 |
 
-Raw → calibrated per benchmark, Jev:
+Jev per benchmark, from raw to calibrated:
 
 | Benchmark | n | NLL raw | NLL cal. | Δ NLL | Brier raw | Brier cal. | Δ Brier | ECE raw | ECE cal. |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -498,15 +498,15 @@ The emulator:
 Fitted temperatures of `temperature@signature` (T > 1 softens an overconfident system). The
 Jev and Emulator columns are cross-fitted: the mean over the five folds. The last column is the
 deployment registry, fitted on the whole run (next section). Signatures are pooled across
-benchmarks: the letter-keyed A–D and A–E signatures mix ARC, MMLU-Pro's short questions, GPQA
-and LEXam.
+benchmarks: the letter-keyed A to D and A to E signatures mix ARC, MMLU-Pro's short
+questions, GPQA and LEXam.
 
 | Signature | Benchmarks | Jev | Emulator | Emulator, deployed |
 | --- | --- | --- | --- | --- |
 | `choice:10:4a0bcc85ad6db29b` | MMLU-Pro (10 options) | 1.09 | 1.22 | 1.220 |
 | `choice:9:926eb22cfa3771fa`, `8:…`, `7:…`, `6:…` | MMLU-Pro (9, 8, 7, 6 options) | 1.43, 1.01, 1.15, 1.12 | 1.26, 1.03, 1.22, 1.22 | 1.256, 1.029, 1.222, 1.220 |
-| `choice:4:503f248273fbb6c6` | ARC, MMLU-Pro (A–D) | 1.61 | 1.01 | 1.015 |
-| `choice:5:62106b9c5cb2462d` | GPQA, LEXam (A–E, E = IDK) | 0.96 | 1.01 | 1.015 |
+| `choice:4:503f248273fbb6c6` | ARC, MMLU-Pro (A to D) | 1.61 | 1.01 | 1.015 |
+| `choice:5:62106b9c5cb2462d` | GPQA, LEXam (A to E, E = IDK) | 0.96 | 1.01 | 1.015 |
 | `choice:4:cf9e907ab30ae267` | AG News | 2.13 | 2.11 | 2.112 |
 | `choice:77:0a3f622029033ef1` | banking77 | 1.34 | 1.31 | 1.309 |
 | `choice:150:6ad22f70c3e44a2a` | CLINC150 | 1.01 | 1.00 | 0.997 |
@@ -515,44 +515,45 @@ and LEXam.
 | `score:5:914aeb8045b2218c` | Yelp | 1.89 | 2.01 | 2.010 |
 | (fallback, any other signature) | all items | 1.30 (`@global`) | 1.33 (`@global`) | 1.326 |
 
-**Findings.**
+Findings:
 
-1. **Jev's miscalibration depends on the benchmark, and held-out calibration fixes most of
-   it.** Per-signature temperature cuts macro NLL by 0.152 [0.136, 0.169] and Brier by
-   0.011 [0.009, 0.013], with accuracy unchanged. ECE falls from 0.078 to 0.047.
-2. **Both systems are overconfident on the classification and rating tasks.**
-   - Fitted temperatures on AG News, SST-5, Yelp and banking77: Jev 2.1, 2.4, 1.9 and 1.3;
-     the emulator 2.1, 2.0, 2.0 and 1.3.
+1. Jev's miscalibration depends on the benchmark, and held-out calibration fixes most of it.
+   Per-signature temperature cuts macro NLL by 0.152 [0.136, 0.169] and Brier by 0.011
+   [0.009, 0.013], with accuracy unchanged. ECE falls from 0.078 to 0.047.
+2. Both systems are overconfident on the classification and rating tasks.
+   - The fitted temperatures on AG News, SST-5, Yelp and banking77 are 2.1, 2.4, 1.9 and 1.3
+     for Jev, and 2.1, 2.0, 2.0 and 1.3 for the emulator.
    - Jev is close to calibrated on CLINC150 (1.01) and MMLU-Pro (1.09), and underconfident
      on BoolQ (0.84).
-   - The emulator is calibrated on CLINC150 and the letter-keyed A–D/A–E questions
-     (1.00-1.01), and overconfident on MMLU-Pro (1.22) and BoolQ (1.18).
-3. **Once calibrated, the emulator is as well calibrated as Jev, but less accurate.** Its ECE
-   falls from 0.086 to 0.043 (Jev: 0.047). Yelp is the largest remaining miscalibration
-   (0.224 → 0.077; Jev 0.041). The NLL and Brier gaps come from accuracy. The emulator trails
-   on MMLU-Pro (−0.197), GPQA (−0.222) and Yelp (−0.063). It is within 0.02 of Jev on ARC,
-   AG News, banking77, CLINC150, BoolQ and SST-5.
-4. **The raw NLL comparison flatters the emulator.** Jev reports exact 0.00 probabilities.
-   The ε = 1e-4 floor alone (`identity@global`) removes 0.085 of Jev's NLL but only 0.003 of
-   the emulator's. Examples for Jev: banking77 1.280 → 1.006, AG News 0.672 → 0.522, SST-5
-   1.462 → 1.291, MMLU-Pro 0.745 → 0.661. So the raw gap is +0.040, and the fair comparison
-   is the calibrated gap, +0.118 [0.102, 0.134]. On MMLU-Pro and CLINC150 the floor is almost
-   all of Jev's gain (0.084 of 0.094, and all of 0.059). There, temperature scaling slightly
-   raises Jev's Brier and ECE (MMLU-Pro: Brier +0.004, ECE 0.047 → 0.062).
-5. **One global temperature is not enough for either system.** `temperature@global` leaves
-   ECE at 0.084 for both (raw: Jev 0.078, emulator 0.086), because it also softens the
-   benchmarks that were already calibrated. Per-benchmark and per-signature temperatures
-   perform the same, since signatures nearly coincide with benchmarks.
-6. **The arms rank the same for both systems.**
+   - The emulator is calibrated on CLINC150 and the letter-keyed A to D and A to E questions
+     (1.00 to 1.01), and overconfident on MMLU-Pro (1.22) and BoolQ (1.18).
+3. Once calibrated, the emulator is as well calibrated as Jev, but it is less accurate. Its
+   ECE falls from 0.086 to 0.043 (Jev: 0.047). Yelp is the largest remaining miscalibration
+   (from 0.224 to 0.077; Jev 0.041). The NLL and Brier gaps come from accuracy: the emulator
+   trails on MMLU-Pro (−0.197), GPQA (−0.222) and Yelp (−0.063), and is within 0.02 of Jev on
+   ARC, AG News, banking77, CLINC150, BoolQ and SST-5.
+4. The raw NLL comparison flatters the emulator, because Jev reports exact 0.00
+   probabilities. The ε = 1e-4 floor alone (`identity@global`) removes 0.085 of Jev's NLL but
+   only 0.003 of the emulator's. For Jev it takes banking77 from 1.280 to 1.006, AG News from
+   0.672 to 0.522, SST-5 from 1.462 to 1.291 and MMLU-Pro from 0.745 to 0.661. So the raw gap
+   is +0.040, and the fair comparison is the calibrated gap, +0.118 [0.102, 0.134]. On
+   MMLU-Pro and CLINC150 the floor is almost all of Jev's gain (0.084 of 0.094, and all of
+   0.059). There, temperature scaling slightly raises Jev's Brier and ECE (MMLU-Pro: Brier
+   +0.004, ECE from 0.047 to 0.062).
+5. One global temperature is not enough for either system. `temperature@global` leaves ECE at
+   0.084 for both (raw: Jev 0.078, emulator 0.086), because it also softens the benchmarks
+   that were already calibrated. Per-benchmark and per-signature temperatures perform the
+   same, since signatures nearly coincide with benchmarks.
+6. The arms rank the same for both systems.
    - `vector@signature` has the best NLL, Brier and accuracy. It adds 0.0066 accuracy for
      Jev and 0.0201 for the emulator, whose position and label biases are larger. Its
-     per-class bias can change the top answer, so it is more than a calibrator: it is a
+     per-class bias can change the top answer, so besides calibrating it applies a
      supervised correction of the label prior. On `select` it also added 0.026 accuracy to
      cyankiwi.
-   - The top-label maps (`platt`, `isotonic`, `histogram`) have the best ECE (0.027-0.038),
-     but worse NLL than temperature.
+   - The top-label maps (`platt`, `isotonic`, `histogram`) have the best ECE (0.027 to
+     0.038), but worse NLL than temperature.
 
-### Does debiasing earn its cost?
+### Debiasing: effect and cost
 
 Each debiased emulator minus the plain emulator, macro average, paired. Rows cover the online
 run's own debiasing and the two offline variants:
@@ -569,25 +570,26 @@ run's own debiasing and the two offline variants:
 | +batch | `temperature@signature` | +0.0022 [-0.0032, +0.0074] | -0.026 [-0.029, -0.024] | -0.007 [-0.009, -0.006] | -0.005 |
 | +batch | `vector@signature` | +0.0007 [-0.0010, +0.0025] | -0.003 [-0.004, -0.002] | -0.000 [-0.001, -0.000] | -0.001 |
 
-- **PriDe: no.** Online or offline, it changes no macro metric measurably after calibration.
-  Online it costs 25% more backend calls; with fitted priors it costs 0 extra calls, still with
-  no gain. It helps where the position prior is strong:
-  - MMLU-Pro: calibrated NLL −0.035 [−0.045, −0.025]. The fitted prior puts 0.17-0.18 on A and
-    E and 0.03 on H and I.
+- PriDe does not pay off. Online or offline, it changes no macro metric measurably after
+  calibration. Online it costs 25% more backend calls; with fitted priors it costs 0 extra
+  calls and still gives no gain. It helps where the position prior is strong:
+  - MMLU-Pro: calibrated NLL −0.035 [−0.045, −0.025]. The fitted prior puts 0.17 to 0.18 on A
+    and E and 0.03 on H and I.
   - AG News: calibrated NLL −0.022, plus 0.0032 [0.0008, 0.0055] accuracy.
 
   GPQA moves the other way (+0.035 [−0.010, +0.081]), and the macro average nets to zero.
-- **Batch helps only by learning each benchmark's label mix.** It divides every answer by the
-  batch's mean prediction. That is right only when deployment traffic has the benchmark's
+- Batch helps only by learning each benchmark's label mix. It divides every answer by the
+  batch's mean prediction, which is right only when deployment traffic has the benchmark's
   label distribution. Its calibrated gain comes from CLINC150 (−0.075), Yelp (−0.071),
   banking77 (−0.069), MMLU-Pro (−0.023) and SST-5 (−0.020); it costs BoolQ +0.015. After
   `vector@signature`, which makes the same correction, it adds only −0.003.
 
 ### The tied finalist: cyankiwi
 
-**One-call result** (current; [Current results](#current-results-one-call-per-question-holdout)):
-cyankiwi − QuantTrio on the 9 benchmarks is -0.0014 [-0.0101, +0.0069] in accuracy and +0.003
-[-0.005, +0.012] in calibrated NLL; calibrated ECE 0.032 against 0.035. The tie holds. The
+In the current one-call runs
+([Current results](#current-results-one-call-per-question-holdout)), cyankiwi − QuantTrio on
+the 9 benchmarks is -0.0014 [-0.0101, +0.0069] in accuracy and +0.003 [-0.005, +0.012] in
+calibrated NLL, with calibrated ECE 0.032 against 0.035, so the two are still tied. The
 registry [`calibration/qwen3.6-27b-int4-cyankiwi/registry.json`](../../calibration/qwen3.6-27b-int4-cyankiwi/registry.json)
 is refitted on the one-call run: 12 signatures, fallback T = 1.275.
 
@@ -596,7 +598,7 @@ Yelp.
 
 `qwen3.6-27b-int4-cyankiwi` (`cyankiwi/Qwen3.6-27B-AWQ-INT4`) answered the
 same 19,840 items the same way: online PriDe α = 0.1, 16:32:43 to 18:35:51 UTC, 0 errors,
-31,594 backend calls of which 6,460 were PriDe's. **GPU time: 2 h 5 min** (16:30:38 to
+31,594 backend calls of which 6,460 were PriDe's. GPU time was 2 h 5 min (16:30:38 to
 18:35:52 UTC, 2.1 min startup). Plain emulator, macro average:
 
 | System | Accuracy | NLL raw | NLL calibrated | Brier raw | Brier calibrated | ECE raw | ECE calibrated | `vector@signature` accuracy / NLL |
@@ -605,19 +607,19 @@ same 19,840 items the same way: online PriDe α = 0.1, 16:32:43 to 18:35:51 UTC,
 | cyankiwi | 0.7506 [0.7383, 0.7626] | 0.760 [0.733, 0.788] | 0.697 [0.674, 0.721] | 0.351 [0.338, 0.363] | 0.337 [0.325, 0.349] | 0.076 | 0.035 | 0.7681 / 0.627 |
 | **cyankiwi − QuantTrio** (paired) | -0.0006 [-0.0091, +0.0077] | -0.007 [-0.015, +0.002] | +0.005 [-0.002, +0.013] | -0.001 [-0.005, +0.003] | +0.002 [-0.002, +0.006] | -0.010 | -0.008 | -0.0033 [-0.0108, +0.0039] / -0.000 |
 
-- **The tie holds.** No metric separates the two builds. Cyankiwi's lower calibrated ECE (0.035
-  against 0.043) is a point estimate within ECE noise. QuantTrio stays the recommendation:
-  selection chose it on `select`, and holdout gives no reason to change that. Cyankiwi is the
-  equal alternative on the standard 27B launch (0.95 of the GPU).
-- **Against Jev**, calibrated: accuracy −0.0591 [−0.0711, −0.0471], NLL +0.123
-  [+0.106, +0.139], Brier +0.064 [+0.055, +0.073], ECE −0.012.
-- **Debiasing: same verdict.** Online PriDe changes calibrated NLL by −0.008 [−0.014, −0.002]
-  and accuracy by +0.0022 [−0.0038, +0.0084]. The NLL change is significant but negligible,
-  and it costs 25% more calls. Batch: −0.029 [−0.032, −0.026] after temperature, −0.003 after
-  `vector`.
-- **As returned:** NLL 0.7511, Brier 0.3465, ECE 0.0767; `confidence` ECE 0.0867 (as
-  recorded, with online PriDe).
-- **Registry** (as first fitted): 13 signatures, fallback T = 1.324. It loaded and resolved
+- No metric separates the two builds. Cyankiwi's lower calibrated ECE (0.035 against 0.043)
+  is a point estimate within ECE noise. QuantTrio stays the recommendation: selection chose it
+  on `select`, and holdout gives no reason to change that. Cyankiwi is the equal alternative
+  on the standard 27B launch (0.95 of the GPU).
+- Calibrated, cyankiwi − Jev is −0.0591 [−0.0711, −0.0471] in accuracy, NLL +0.123
+  [+0.106, +0.139], Brier +0.064 [+0.055, +0.073] and ECE −0.012.
+- Debiasing gets the same verdict. Online PriDe changes calibrated NLL by −0.008 [−0.014,
+  −0.002] and accuracy by +0.0022 [−0.0038, +0.0084]. The NLL change is significant but
+  negligible, and it costs 25% more calls. Batch changes calibrated NLL by −0.029 [−0.032,
+  −0.026] after temperature and −0.003 after `vector`.
+- As returned: NLL 0.7511, Brier 0.3465, ECE 0.0767; `confidence` ECE 0.0867 (as recorded,
+  with online PriDe).
+- The registry as first fitted had 13 signatures, fallback T = 1.324. It loaded and resolved
   offline. It was not smoke-tested against a live cyankiwi server.
 
 ### As returned (Jev-style)
@@ -635,9 +637,9 @@ the probability that the returned answer is correct:
   answers carry no `confidence`). Over the same nine, the top probability's ECE is 0.0835 for
   Jev and 0.0903 for the emulator.
 - As a probability of being right, Jev's `confidence` is worse than its top probability
-  (ECE 0.100). It is worst on GPQA (0.212 against 0.131) and SST-5/Yelp. `confidence` is a
-  peakedness score (J3), not a probability, and so is the emulator's `mode_distance`. Set
-  thresholds on calibrated probabilities instead.
+  (ECE 0.100). It is worst on GPQA (0.212 against 0.131) and on SST-5 and Yelp. `confidence`
+  is a peakedness score (J3), not a probability, and so is the emulator's `mode_distance`.
+  Set thresholds on calibrated probabilities instead.
 
 ## Recommended deployment
 
@@ -653,51 +655,49 @@ async with VLLMHTTPBackend(url, "QuantTrio/Qwen3.6-27B-AWQ") as backend:
                         calibrators=registry, round_to=0.01)
 ```
 
-- **Configuration.** Preset `qwen3.6-27b-int4-quanttrio`, the default `state_first` layout,
+- Use preset `qwen3.6-27b-int4-quanttrio`, the default `state_first` layout,
   `mode_distance` confidence, `SingleCallStrategy` (one model call per question), no debiaser,
   and `round_to=0.01` for Jev-like output. The server needs `--max-logprobs 576`.
-- **Calibration: `temperature@signature`**, fitted on the whole one-call holdout run's raw
+- Calibrate with `temperature@signature`, fitted on the whole one-call holdout run's raw
   probabilities (`scripts/calibrate.py registry ... --calibrator temperature --priors none`).
   The registry holds one temperature for each signature with at least 30 items: 12
   signatures, from 0.989 (CLINC150) to 2.112 (AG News); SST-5 1.961, BoolQ 1.182, MMLU-Pro
   (10 options) 1.219. Every other signature of this model and template gets T = 1.269.
   Held-out estimate on the 9 benchmarks (cross-fitted): ECE 0.035, NLL 0.688, Brier 0.320,
   accuracy unchanged.
-- **Why not `vector@signature`?** It scores better here (NLL 0.634, Brier 0.303, accuracy
-  0.7792). But its biases encode the benchmarks' label mix, and the registry would apply them
-  to every question with the same signature (the logit values below are from the multi-call
-  study):
+- `vector@signature` scores better here (NLL 0.634, Brier 0.303, accuracy 0.7792), but its
+  biases encode the benchmarks' label mix, and the registry would apply them to every
+  question with the same signature (the logit values below are from the multi-call study):
   - Every Noul question has signature `noul:2:da39667d142647f1`. The BoolQ-fitted vector would
     add +1.04 logits toward "yes" to all of them (62% of BoolQ's holdout questions are
     answered yes).
-  - Every A–E letter question shares GPQA and LEXam's signature. Their vector subtracts 1.7
+  - Every A to E letter question shares GPQA and LEXam's signature. Their vector subtracts 1.7
     logits from E, because their E ("I don't know") is never the gold answer.
 
   Temperature only rescales. It never changes an answer, and it transfers to new questions.
   Fit `vector` only on labelled traffic of your own question types (`--calibrator vector`).
-- **No debiaser**: see above. The artifacts hold parameters only: 12 temperatures plus the
+- Use no debiaser (see above). The artifacts hold parameters only: 12 temperatures plus the
   fallback, keyed by backend, model and template id. They contain no per-item data.
-- **Smoke test** (with the multi-call registry, which had the same signatures plus Yelp's). The
-  registry was loaded into an `Emulator` against the live server. It
-  answered all 19 Jev doc-example requests (`tests/golden/fixtures/jev_docs`, 41 questions).
-  Every response validates as a `SystemOneResponse` with `model`
-  `jevemu/QuantTrio/Qwen3.6-27B-AWQ`. The diagnostics record which calibrator was used:
-  `temperature:exact` for the 14 Noul questions (the BoolQ signature), and
-  `temperature:temperature_fallback` for the 27 Choice and Score questions, whose option keys
-  are the docs' own.
+- The smoke test used the multi-call registry, which had the same signatures plus Yelp's. The
+  registry was loaded into an `Emulator` against the live server, and it answered all 19 Jev
+  doc-example requests (`tests/golden/fixtures/jev_docs`, 41 questions). Every response
+  validates as a `SystemOneResponse` with `model` `jevemu/QuantTrio/Qwen3.6-27B-AWQ`. The
+  diagnostics record which calibrator was used: `temperature:exact` for the 14 Noul questions
+  (the BoolQ signature), and `temperature:temperature_fallback` for the 27 Choice and Score
+  questions, whose option keys are the docs' own.
 
 ## Jev's confidence function (J3)
 
-**Result.** Jev's `confidence` is
+Jev's `confidence` is
 
 $$\text{confidence} = \operatorname{clip}\left(1 - \frac{\mathbb{E}[d(X, \text{mode})]}{\min_c \mathbb{E}_{\text{uniform}}[d(X, c)]},\ 0,\ 1\right)$$
 
-In words: it measures how far the probability mass lies from the most likely answer (the
-mode), relative to how spread out a uniform distribution would be:
+It measures how far the probability mass lies from the most likely answer (the mode),
+relative to how spread out a uniform distribution would be:
 
-- **Choice:** `d` is the 0/1 distance and the normalizer is (K − 1)/K, so the formula is
+- For Choice, `d` is the 0/1 distance and the normalizer is (K − 1)/K, so the formula is
   exactly the documented `peak_linear`, (K·p_max − 1)/(K − 1).
-- **Score:** `d` is the level distance |i − j| and the normalizer is K/4 (even K) or
+- For Score, `d` is the level distance |i − j| and the normalizer is K/4 (even K) or
   (K² − 1)/(4K) (odd K): 1.2 for 5 levels. Mass one level from the mode costs less than
   mass four levels away.
 
@@ -706,14 +706,13 @@ This matches both ScoreExplorer answers in Jev's docs that `peak_linear` misses:
 reported 0.89. It is registered as `jevemu.confidence.mode_distance`
 (`CONFIDENCE_FUNCTIONS["mode_distance"]`).
 
-**Protocol change.** A `ConfidenceFn` is now called as `fn(probs, ordinal=...)`, with
-`ordinal=True` for Score answers. The emulator passes it, and every built-in function accepts
-it.
+A `ConfidenceFn` is now called as `fn(probs, ordinal=...)`, with `ordinal=True` for Score
+answers. The emulator passes it, and every built-in function accepts it.
 
-**Fit.** The fit used Jev's 18,206 select-half Choice and Score answers (the 1,635 Noul
-answers carry no confidence). It was checked on the 18,205 holdout answers. Probabilities are
-renormalized. Predictions are rounded to 0.01, as Jev rounds, and then compared with the
-reported value. The candidates:
+The fit used Jev's 18,206 select-half Choice and Score answers (the 1,635 Noul answers carry
+no confidence) and was checked on the 18,205 holdout answers. Probabilities are renormalized.
+Predictions are rounded to 0.01, as Jev rounds, and then compared with the reported value.
+The candidates were:
 
 - the design's four families;
 - `mode_distance`;
@@ -740,20 +739,16 @@ Mean absolute error:
 With `mode_distance`, 59.8% of select predictions equal the reported value and 95.9% are
 within 0.01 (holdout: 59.6% and 95.7%). With `peak_linear`, 52.1% and 82.5%.
 
-**Choice of function.** We register `mode_distance`, not the fitted power version
-(γ = 1.014 for Choice, 1.013 for Score):
+We register `mode_distance`, not the fitted power version (γ = 1.014 for Choice, 1.013 for
+Score). The power model's 0.0004 gain fits the rounding of Jev's *displayed* probabilities,
+not Jev's function. Jev computes confidence before rounding, as the docs' examples and the
+residuals (95.9% within 0.01) show. Every option displayed as 0.00 hides up to 0.005 of mass,
+so renormalized displayed vectors overstate p_max. For Choice answers, the residual
+(reported − predicted) drifts from +0.001 with no 0.00 options (1,189 answers), to −0.001
+with 1 to 3 of them (5,548), to −0.005 with 4 or more (7,864). The emulator's probabilities
+are not rounded, so the γ correction would bias its confidence.
 
-- **Where the power model's gain comes from.** Its 0.0004 gain fits the rounding of Jev's
-  *displayed* probabilities, not Jev's function. Jev computes confidence before rounding, as
-  shown by the docs' examples and the residuals (95.9% within 0.01). Every option displayed as
-  0.00 hides up to 0.005 of mass, so renormalized displayed vectors overstate p_max.
-- **The evidence.** For Choice answers, the residual (reported − predicted) drifts from +0.001
-  with no 0.00 options (1,189 answers), to −0.001 with 1-3 of them (5,548), to −0.005 with 4
-  or more (7,864).
-- **Consequence.** The emulator's probabilities are not rounded, so the γ correction would
-  bias its confidence.
-
-**Default.** The emulator's default `confidence_fn` is now `mode_distance`
+The emulator's default `confidence_fn` is now `mode_distance`
 (`jevemu.confidence.DEFAULT_CONFIDENCE`). It changes only Score confidences. The holdout run
 above is the first to record it in its manifest; the `select` runs recorded `peak_linear`.
 
@@ -774,7 +769,7 @@ MCQ means multiple-choice question.
 | `contextual` | divide by the distribution for a content-free state (`"N/A"`), cached per distinct question | every type | `len(content_free)` once per distinct question: +1 per item for MCQ banks and BoolQ, +1 per benchmark for AG News, banking77, CLINC150, SST-5 and Yelp |
 | `batch` | divide by the mean distribution of a recorded batch (priors fitted offline) | every type | 0 |
 
-- **Diagnostics.** Each answer's `x_jevemu` records:
+- Each answer's `x_jevemu` diagnostics record:
   - `debiaser` (its id);
   - `debias_calls` (included in `n_backend_calls`);
   - `debias_prior`;
@@ -783,18 +778,18 @@ MCQ means multiple-choice question.
   - `raw_probabilities`: the identity order, before debiasing.
 
   A debiased run therefore also holds the undebiased emulator.
-- **Manifests.** Run manifests record the debiaser id.
-- **Priors.** A prior applies per *prior key*, the question signature plus the fixed
-  positions. `LabelPriors` JSON (`scripts/calibrate.py priors`) turns PriDe and batch into
-  zero-cost debiasers.
-- **Offline variants** (in `crossfit --debias`):
+- Run manifests record the debiaser id.
+- A prior applies per *prior key*, the question signature plus the fixed positions.
+  `LabelPriors` JSON (`scripts/calibrate.py priors`) turns PriDe and batch into zero-cost
+  debiasers.
+- The offline variants in `crossfit --debias` are:
   - `none`: the raw probabilities.
   - `batch`: needs any run with diagnostics.
   - `pride`: needs a run that recorded permuted presentations, such as an online `pride`
     run. Its priors are fitted out of fold.
 
   `contextual` and `permutation` need their own backend passes.
-- **Tests.** The FakeBackend's model multiplies each option's content weight by a position
+- In the tests, the FakeBackend's model multiplies each option's content weight by a position
   bias (×12 on A):
   - PriDe and contextual recover the true distribution exactly.
   - Permutation restores the content ranking and is invariant to rotating the input order.
@@ -805,15 +800,15 @@ MCQ means multiple-choice question.
 
 ## Further emulator runs
 
-Done (multi-call history, before one-call scoring): the required `--debiaser pride:alpha=0.1`
-holdout runs of the Stage 2 winner and of the tied cyankiwi build (above).
+The required `--debiaser pride:alpha=0.1` holdout runs of the Stage 2 winner and of the tied
+cyankiwi build are done (multi-call history, before one-call scoring; see above).
 
-Optional, for completeness only, since PriDe had no measurable effect:
+Two more runs are optional, for completeness only, since PriDe had no measurable effect:
 
-1. **`--debiaser contextual`** adds one scoring pass per MCQ and BoolQ item, one per
-   benchmark elsewhere, and gives the `contextual` arm.
-2. **`--debiaser permutation`**, on the five MCQ benchmarks, costs ×*F* (×10 on MMLU-Pro). It
-   is the full permutation arm, and PriDe's upper bound.
+1. `--debiaser contextual` adds one scoring pass per MCQ and BoolQ item, one per benchmark
+   elsewhere, and gives the `contextual` arm.
+2. `--debiaser permutation`, on the five MCQ benchmarks, costs ×*F* (×10 on MMLU-Pro). It is
+   the full permutation arm, and PriDe's upper bound.
 
 Add each run to the same `crossfit` command as another `NAME=RUN_DIR`.
 
@@ -830,9 +825,9 @@ Sep 25, 2026. `gpt-6-luna` over the OpenAI API, scored from logprobs like the em
 ([openai_probe_report.md](openai_probe_report.md), [selection.md](selection.md#gpt-6-luna-openai-api-logprob-scored)),
 with no debiaser.
 
-OpenAI returns at most 5 top logprobs, so **MMLU-Pro, banking77 and CLINC150 cannot be run on
-OpenAI models**. **Yelp is dropped** for every system. This study therefore covers the other
-**6 benchmarks, 7,534 holdout items** answered by all three systems. That is why its Jev and
+OpenAI returns at most 5 top logprobs, so MMLU-Pro, banking77 and CLINC150 cannot be run on
+OpenAI models, and Yelp is dropped for every system. This study therefore covers the other 6
+benchmarks, 7,534 holdout items answered by all three systems, which is why its Jev and
 emulator numbers differ from the 9-benchmark grid above.
 
 ```bash
@@ -880,7 +875,7 @@ Every calibrator, Luna (macro over the 6):
 | `isotonic@signature` | 0.7577 [0.7384, 0.7771] | 0.745 [0.682, 0.818] | 0.349 [0.328, 0.371] | 0.062 | -0.263 [-0.300, -0.220] |
 | `histogram@signature` | 0.7517 [0.7328, 0.7709] | 0.733 [0.678, 0.791] | 0.350 [0.329, 0.372] | 0.045 | -0.276 [-0.306, -0.246] |
 
-Luna per benchmark, raw → `temperature@signature`:
+Luna per benchmark, from raw to `temperature@signature`:
 
 | Benchmark | n | Accuracy | NLL raw | NLL cal. | Δ NLL | Brier raw | Brier cal. | ECE raw | ECE cal. |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -894,19 +889,19 @@ Luna per benchmark, raw → `temperature@signature`:
 
 ### Findings
 
-- **Raw Luna is the worst calibrated of the three:** ECE 0.139 against 0.082 for Jev and
-  0.079 for the emulator; NLL 1.008. All three are overconfident, Luna most: its fitted global
+- Raw Luna is the worst calibrated of the three: ECE 0.139 against 0.082 for Jev and 0.079
+  for the emulator, and NLL 1.008. All three are overconfident, Luna most: its fitted global
   temperature is 2.57, against 1.87 for Jev and 1.81 for the emulator.
-- **Calibration recovers most of it.** `temperature@signature` cuts Luna's NLL by 0.327
-  (Jev 0.136, emulator 0.064). Its ECE drops from 0.139 to 0.054, close to Jev (0.048) and the
-  emulator (0.044). The NLL gap to Jev halves (+0.361 → +0.170) but remains, because Luna is
-  0.061 less accurate. Calibrated, Luna is still 0.092 NLL behind the emulator.
-- **Best arm:** `vector@signature` (accuracy 0.7674, NLL 0.630). Same caveat as above: it
-  learns each benchmark's answer mix.
-- **Batch debiasing does not pay**, as for the emulator. Measured with Yelp (7 benchmarks),
+- Calibration recovers most of it. `temperature@signature` cuts Luna's NLL by 0.327 (Jev
+  0.136, emulator 0.064). Its ECE drops from 0.139 to 0.054, close to Jev (0.048) and the
+  emulator (0.044). The NLL gap to Jev halves, from +0.361 to +0.170, but remains, because
+  Luna is 0.061 less accurate. Calibrated, Luna is still 0.092 NLL behind the emulator.
+- The best arm is `vector@signature` (accuracy 0.7674, NLL 0.630), with the same caveat as
+  above: it learns each benchmark's answer mix.
+- Batch debiasing does not pay, as for the emulator. Measured with Yelp (7 benchmarks),
   `luna+batch` − `luna` is accuracy +0.0010 [-0.0051, +0.0069] and NLL -0.005 after
   calibration.
-- **Luna does not beat the local emulator here.** It is 0.009 less accurate on holdout
+- Luna does not beat the local emulator here. It is 0.009 less accurate on holdout
   (-0.0009 [-0.0231, +0.0210] on `select`) and worse on every probability metric, raw and
   calibrated. It costs about 4x as much per item as the emulator at the 410 W electricity
   estimate (6x at the old 280 W estimate;
@@ -974,7 +969,7 @@ Every calibrator, the fast emulator (macro, 9 benchmarks):
 | `isotonic@signature` | 0.7327 [0.7189, 0.7463] | 0.779 [0.750, 0.808] | 0.360 [0.348, 0.372] | 0.043 | -0.031 [-0.041, -0.018] |
 | `histogram@signature` | 0.7312 [0.7175, 0.7449] | 0.784 [0.754, 0.814] | 0.362 [0.349, 0.374] | 0.040 | -0.026 [-0.037, -0.011] |
 
-The fast emulator per benchmark, raw → `temperature@signature`:
+The fast emulator per benchmark, from raw to `temperature@signature`:
 
 | Benchmark | n | Accuracy | NLL raw | NLL cal. | Δ NLL | Brier raw | Brier cal. | ECE raw | ECE cal. |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -989,8 +984,8 @@ The fast emulator per benchmark, raw → `temperature@signature`:
 | sst5 | 1105 | 0.5620 [0.5330, 0.5910] | 1.206 | 1.048 | -0.158 [-0.196, -0.121] | 0.632 | 0.571 | 0.205 | 0.041 |
 | **macro** | 17340 | 0.7319 [0.7184, 0.7457] | 0.809 | 0.761 | -0.049 [-0.055, -0.043] | 0.371 | 0.358 | 0.079 | 0.037 |
 
-**Deployment registry:** `calibration/qwen3.6-35b-a3b-fast/registry.json`, now refitted on the
-one-call `holdout` run's raw probabilities over the 9 benchmarks (17,340 items):
+The deployment registry, `calibration/qwen3.6-35b-a3b-fast/registry.json`, is now refitted
+on the one-call `holdout` run's raw probabilities over the 9 benchmarks (17,340 items):
 
 - 12 signatures with at least 30 items, with T from 1.024 (CLINC150's 150 options) to 1.948
   (AG News);
@@ -998,7 +993,8 @@ one-call `holdout` run's raw probabilities over the 9 benchmarks (17,340 items):
 
 Held-out estimate on the benchmarks (one-call run): ECE 0.037, NLL 0.835, Brier 0.363
 ([Current results](#current-results-one-call-per-question-holdout)). As first fitted on the
-multi-call run: T 0.96-1.95, fallback 1.277, the `temperature@signature` row above.
+multi-call run it had T 0.96 to 1.95 and fallback 1.277 (the `temperature@signature` row
+above).
 
 Smoke test against the live fast server (throwaway script, the multi-call registry): the
 registry was loaded into an `Emulator` (`NoEchoAutoStrategy`, no debiaser). It answered all
@@ -1009,27 +1005,28 @@ calibrator: noul by its own signature, choice and score by the model-and-templat
 
 ### Findings
 
-- **The fast emulator trades 0.035 accuracy for 3.8x the dense emulator's throughput.**
+- The fast emulator trades 0.035 accuracy for 3.8x the dense emulator's throughput.
   - Throughput: 11.07 against 2.94 q/s on `select`, 9 benchmarks (in this multi-call study the
     dense holdout run's online PriDe added calls).
   - Accuracy: fast − dense is -0.0353 [-0.0488, -0.0219] on holdout. That is larger than on
     `select` (-0.0200 [-0.0333, -0.0063]), where the dense run scored 0.015 lower and the fast
     one the same. The fast emulator is 0.093 behind Jev.
-- **Its raw probabilities are about as well calibrated as the dense emulator's:** ECE 0.079
-  against 0.071; fitted global temperature 1.28 against 1.27 (Jev: 1.26).
+- Its raw probabilities are about as well calibrated as the dense emulator's: ECE 0.079
+  against 0.071, and fitted global temperature 1.28 against 1.27 (Jev: 1.26).
   `temperature@signature` takes its ECE to 0.037, level with the dense emulator (0.039) and
   Jev (0.048). The remaining probability gap comes from accuracy: calibrated NLL +0.094 and
   Brier +0.043 against the dense emulator, +0.206 and +0.103 against Jev.
-- **Best arm:** `vector@signature` (accuracy 0.7523, NLL 0.690). Same caveat as above: it
-  learns each benchmark's answer mix.
+- The best arm is `vector@signature` (accuracy 0.7523, NLL 0.690), with the same caveat as
+  above: it learns each benchmark's answer mix.
 
 ### The GPTQ build on holdout
 
 Sep 26, 2026. `qwen3.6-35b-a3b-int4-palmfuture` (`palmfuture/Qwen3.6-35B-A3B-GPTQ-Int4`, the
 same MoE model, GPTQ 4-bit) answered all 17,340 holdout items of the 9 benchmarks with 0 errors
-and no debiaser. Why it was run and its speed:
-[selection.md](selection.md#the-gptq-build-as-a-finalist-qwen36-35b-a3b-int4-palmfuture). This
-study is multi-call history (before one-call scoring); the runs are redone with `auto_single`.
+and no debiaser.
+[selection.md](selection.md#the-gptq-build-as-a-finalist-qwen36-35b-a3b-int4-palmfuture) gives
+the reason for the run and its speed. This study is multi-call history (before one-call
+scoring); the runs are redone with `auto_single`.
 
 ```bash
 # As run (multi-call history, before one-call scoring); current runs are <preset>.auto_single.state_first
@@ -1061,37 +1058,39 @@ study.
 Other arms, GPTQ build: `temperature@global` NLL 0.795, ECE 0.070 (T 1.302);
 `temperature@benchmark` 0.767 / 0.041; `vector@signature` is again the best arm (accuracy
 0.7508, NLL 0.696, Brier 0.335, ECE 0.038). Per benchmark, calibration helps most where the raw
-ECE is highest: SST-5 0.225 → 0.061, banking77 0.111 → 0.042, MMLU-Pro 0.095 → 0.017, AG News
-0.090 → 0.019.
+ECE is highest: SST-5 from 0.225 to 0.061, banking77 from 0.111 to 0.042, MMLU-Pro from 0.095
+to 0.017, AG News from 0.090 to 0.019.
 
-**Deployment registry:**
-[`calibration/qwen3.6-35b-a3b-int4-palmfuture/registry.json`](../../calibration/qwen3.6-35b-a3b-int4-palmfuture/registry.json).
-It holds `temperature` per signature, refitted on the one-call `holdout` run's raw
-probabilities (9 benchmarks, 17,340 items):
+The deployment registry,
+[`calibration/qwen3.6-35b-a3b-int4-palmfuture/registry.json`](../../calibration/qwen3.6-35b-a3b-int4-palmfuture/registry.json),
+holds `temperature` per signature, refitted on the one-call `holdout` run's raw probabilities
+(9 benchmarks, 17,340 items):
 
 - 12 signatures with at least 30 items, with T from 1.056 (CLINC150) to 1.991 (AG News);
 - T = 1.325 for every other signature of this model and template.
 
-As first fitted on the multi-call run: T 0.99-1.99, fallback 1.302.
+As first fitted on the multi-call run it had T 0.99 to 1.99 and fallback 1.302.
 
 `CalibratorRegistry.load` reads it. It was not smoke-tested against a live server.
 
-**Findings.**
+Findings:
 
-- **Same accuracy as the AWQ fast emulator** on holdout (−0.0017, tied). On `select` it was
-  0.011 lower, and that interval excludes 0
+- The GPTQ build has the same accuracy as the AWQ fast emulator on holdout (−0.0017, tied). On
+  `select` it was 0.011 lower, and that interval excludes 0
   ([selection.md](selection.md#the-gptq-build-as-a-finalist-qwen36-35b-a3b-int4-palmfuture)).
-- **Slightly worse raw probabilities:** ECE 0.091 against 0.079, NLL +0.017. Calibration mostly
-  closes the gap: calibrated NLL +0.007 [-0.001, +0.014] (tied), Brier +0.004 [+0.000, +0.008].
-- **Against Jev** it is 0.095 behind, like the AWQ build (0.093).
+- Its raw probabilities are slightly worse: ECE 0.091 against 0.079, NLL +0.017. Calibration
+  mostly closes the gap: calibrated NLL +0.007 [-0.001, +0.014] (tied), Brier +0.004 [+0.000,
+  +0.008].
+- Against Jev it is 0.095 behind, like the AWQ build (0.093).
 
 ### The Gemma 4 26B-A4B build on holdout
 
 Sep 26, 2026. `gemma-4-26b-a4b-int4-cyankiwi` (`cyankiwi/gemma-4-26B-A4B-it-qat-AWQ-INT4`, an
 INT4 build of Google's QAT Gemma 4 26B-A4B, a MoE with 3.8B active parameters) answered all
-17,340 holdout items of the 9 benchmarks with 0 errors and no debiaser. Why it was run and its
-speed: [selection.md](selection.md#gemma-4-26b-a4b-as-a-finalist). This study is multi-call
-history (before one-call scoring) and predates the Gemma 4 prompt fix; the runs were redone.
+17,340 holdout items of the 9 benchmarks with 0 errors and no debiaser.
+[selection.md](selection.md#gemma-4-26b-a4b-as-a-finalist) gives the reason for the run and its
+speed. This study is multi-call history (before one-call scoring) and predates the Gemma 4
+prompt fix; the runs were redone.
 
 ```bash
 # As run (multi-call history, before one-call scoring); current runs are <preset>.auto_single.state_first
@@ -1129,35 +1128,36 @@ Brier 0.353, ECE 0.046). Vector scaling changes which answer is on top, so its a
 partly learns each benchmark's answer mix (same caveat as above).
 
 Fitted temperatures (`temperature@benchmark`, mean over folds) are higher than the Qwen builds'
-(about 1.0-2.0) on every benchmark: GPQA 3.29, SST-5 3.17, LEXam 3.16, AG News 2.77, MMLU-Pro
-2.24, BoolQ 2.04, banking77 1.54, ARC 1.49, CLINC150 1.17. Per benchmark, calibration helps
-most where the raw ECE is highest: GPQA 0.367 → 0.112, LEXam 0.337 → 0.104, SST-5 0.308 → 0.061,
-MMLU-Pro 0.241 → 0.039, banking77 0.188 → 0.068.
+(about 1.0 to 2.0) on every benchmark: GPQA 3.29, SST-5 3.17, LEXam 3.16, AG News 2.77,
+MMLU-Pro 2.24, BoolQ 2.04, banking77 1.54, ARC 1.49, CLINC150 1.17. Per benchmark, calibration
+helps most where the raw ECE is highest: GPQA from 0.367 to 0.112, LEXam from 0.337 to 0.104,
+SST-5 from 0.308 to 0.061, MMLU-Pro from 0.241 to 0.039, banking77 from 0.188 to 0.068.
 
-**Deployment registry:**
-[`calibration/gemma-4-26b-a4b-int4-cyankiwi/registry.json`](../../calibration/gemma-4-26b-a4b-int4-cyankiwi/registry.json).
-It holds `temperature` per signature, refitted on the one-call `holdout` run after the prompt
-fix (raw probabilities, 9 benchmarks, 17,340 items):
+The deployment registry,
+[`calibration/gemma-4-26b-a4b-int4-cyankiwi/registry.json`](../../calibration/gemma-4-26b-a4b-int4-cyankiwi/registry.json),
+holds `temperature` per signature, refitted on the one-call `holdout` run after the prompt fix
+(raw probabilities, 9 benchmarks, 17,340 items):
 
 - 12 signatures with at least 30 items, with T from 1.197 (CLINC150) to 3.568 (SST-5);
 - T = 1.681 for every other signature of this model and template (`state_first-5d29289f8b87`).
 
-As first fitted on the multi-call run before the prompt fix: T 1.17-3.17, fallback 1.718.
+As first fitted on the multi-call run before the prompt fix it had T 1.17 to 3.17 and fallback
+1.718.
 
 It was not smoke-tested against a live server.
 
-**Findings.**
+Findings:
 
-- **Less accurate than the Qwen MoE builds:** -0.018 against the fast emulator, and the interval
-  excludes 0. Against Jev it is 0.111 behind (the Qwen MoEs: 0.093-0.095).
-- **Strongly overconfident before calibration.** Raw ECE is 0.195, against 0.079-0.091 for the
-  Qwen MoEs and 0.072 for Jev, about as high as DeepSeek V4.1 Flash's free read (0.191 on its 7
-  benchmarks, below). Gemma 4 12B showed the same on the screen (NLL 1.18). The cause is not
-  known. These runs predate the Gemma 4 prompt fix: before it, the prompt lacked the empty
-  thought channel, and the top-k could keep the wrong one of two same-text tokens. In a
-  50-item-per-benchmark A/B the fix moved NLL both ways (26B-A4B 1.548 → 1.447, 12B 1.289 →
-  1.439), so it does not explain the overconfidence.
-- **Calibration removes most of it but not all.** Temperature per signature cuts NLL from 1.322
+- Gemma is less accurate than the Qwen MoE builds: -0.018 against the fast emulator, and the
+  interval excludes 0. Against Jev it is 0.111 behind (the Qwen MoEs: 0.093 to 0.095).
+- It is strongly overconfident before calibration. Raw ECE is 0.195, against 0.079 to 0.091
+  for the Qwen MoEs and 0.072 for Jev, about as high as DeepSeek V4.1 Flash's free read (0.191
+  on its 7 benchmarks, below). Gemma 4 12B showed the same on the screen (NLL 1.18). The cause
+  is not known. These runs predate the Gemma 4 prompt fix: before it, the prompt lacked the
+  empty thought channel, and the top-k could keep the wrong one of two same-text tokens. In a
+  50-item-per-benchmark A/B the fix moved NLL both ways (26B-A4B from 1.548 to 1.447, 12B from
+  1.289 to 1.439), so it does not explain the overconfidence.
+- Calibration removes most of it but not all. Temperature per signature cuts NLL from 1.322
   to 0.854 and ECE to 0.061. Calibrated, Gemma is still behind the fast emulator (NLL +0.094,
   Brier +0.025, ECE +0.024).
 
@@ -1175,12 +1175,12 @@ Sep 26, 2026. `deepseek/deepseek-v4.1-flash` over OpenRouter, pinned to the `waf
 scored from logprobs like Luna ([openrouter_probe_report.md](openrouter_probe_report.md),
 [selection.md](selection.md#deepseek-v41-flash-openrouter-logprob-scored)), with no debiaser.
 
-OpenRouter returns up to 20 top logprobs, so MMLU-Pro runs, but **banking77 and CLINC150
-cannot**. Yelp is dropped. Two studies:
+OpenRouter returns up to 20 top logprobs, so MMLU-Pro runs, but banking77 and CLINC150
+cannot. Yelp is dropped. There are two studies:
 
-- **Main study:** the other **7 benchmarks, 13,550 holdout items**, answered by Jev, both
+- The main study covers the other 7 benchmarks, 13,550 holdout items, answered by Jev, both
   emulators and DeepSeek.
-- **Second study:** adds Luna, and so drops MMLU-Pro (6 benchmarks, 7,534 items, the same items
+- The second study adds Luna, and so drops MMLU-Pro (6 benchmarks, 7,534 items, the same items
   as the Luna study above).
 
 ```bash
@@ -1225,7 +1225,7 @@ On Luna's 6 benchmarks (second study):
 - DeepSeek − Luna, point differences: accuracy +0.004, NLL +0.226 raw and -0.035 calibrated,
   Brier +0.034 raw and -0.011 calibrated, ECE +0.048 raw and +0.011 calibrated.
 
-DeepSeek per benchmark, raw → `temperature@signature`:
+DeepSeek per benchmark, from raw to `temperature@signature`:
 
 | Benchmark | n | Accuracy | NLL raw | NLL cal. | Δ NLL | Brier raw | Brier cal. | ECE raw | ECE cal. |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -1245,16 +1245,15 @@ These findings compare DeepSeek's free-read run with the earlier multi-call emul
 Outputs), QuantTrio − DeepSeek on the 6 shared benchmarks is +0.0105 [−0.0093, +0.0299] in
 accuracy: still a tie.
 
-- **Raw DeepSeek (free read) was the worst calibrated system measured** (ECE 0.191, NLL 1.301).
-  Its first-token logprobs are far too sharp. Its fitted global temperature is 2.49, against 1.45
-  for Jev, 1.44 for the emulator and 1.51 for the fast MoE in this study. It is sharpest on the
-  knowledge sets (GPQA, LEXam, MMLU-Pro: raw ECE 0.21–0.31) and SST-5 (0.34).
-- **Calibration recovers most of it.** `temperature@signature` cuts NLL by 0.599 and ECE to
-  0.070, still above Jev (0.054) and the emulators (0.042, 0.038). Calibrated, DeepSeek is
-  0.034 NLL behind the dense emulator at slightly higher accuracy. It is ahead of Luna on
-  their 6 benchmarks (-0.035). Its best arm, `vector@signature`, reaches accuracy 0.7557 and
-  NLL 0.671 (same caveat as above: it learns each benchmark's answer mix).
-- **Holdout confirms `select`.** DeepSeek ties the dense emulator on accuracy (+0.005 here,
-  +0.002 on `select`) and is 0.068 behind Jev (0.068 on `select`). Because it can run
-  MMLU-Pro, it is compared on 7 benchmarks where Luna manages 6, at a lower per-item price
-  than Jev.
+- Raw DeepSeek (free read) was the worst calibrated system measured (ECE 0.191, NLL 1.301).
+  Its first-token logprobs are far too sharp: its fitted global temperature is 2.49, against
+  1.45 for Jev, 1.44 for the emulator and 1.51 for the fast MoE in this study. It is sharpest
+  on the knowledge sets (GPQA, LEXam, MMLU-Pro: raw ECE 0.21 to 0.31) and SST-5 (0.34).
+- Calibration recovers most of it, though not all. `temperature@signature` cuts NLL by 0.599
+  and ECE to 0.070, still above Jev (0.054) and the emulators (0.042, 0.038). Calibrated,
+  DeepSeek is 0.034 NLL behind the dense emulator at slightly higher accuracy. It is ahead of
+  Luna on their 6 benchmarks (-0.035). Its best arm, `vector@signature`, reaches accuracy
+  0.7557 and NLL 0.671 (same caveat as above: it learns each benchmark's answer mix).
+- Holdout confirms `select`: DeepSeek ties the dense emulator on accuracy (+0.005 here, +0.002
+  on `select`) and is 0.068 behind Jev (0.068 on `select`). Because it can run MMLU-Pro, it is
+  compared on 7 benchmarks where Luna manages 6, at a lower per-item price than Jev.

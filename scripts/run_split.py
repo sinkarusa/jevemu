@@ -5,6 +5,11 @@
     uv run python scripts/run_split.py run --system jev --benchmarks all --split select \\
         --out runs/select --concurrency 16 --max-usd 1.0
 
+    # CLM-8B on the server docker/clm/compose.yaml runs (scripts/serve_clm.sh); --url defaults
+    # to JEVEMU_CLM_URL, else http://localhost:8700
+    uv run python scripts/run_split.py run --system clm --benchmarks all --split select \\
+        --out runs/select --concurrency 16
+
     # An emulator configuration on the vLLM server scripts/serve_vllm.sh started
     eval "$(scripts/serve_vllm.sh --preset NAME | grep '^export ')"
     uv run python scripts/run_split.py run --system emulator --system-id NAME \\
@@ -34,6 +39,10 @@
 the same command to finish an interrupted or budget-stopped run; failed items are retried) into
 ``<out>/<system_id>/``, then prints the summary table. The emulator reads ``--url``/``--model``
 from ``JEVEMU_VLLM_URL``/``JEVEMU_VLLM_MODEL`` by default and records diagnostics per item.
+``--system clm`` sends the items to ``clm-serve`` (``jevemu.clm_client.ClmClient``: the Jev
+client with CLM's pinned served model, no key unless ``CLM_API_KEY`` is set, no per-token price,
+response cache ``~/.cache/jevemu/clm_cache.sqlite``); its runs are priced by GPU time like the
+emulator's.
 ``--system openai`` wraps ``jevemu.backends.openai_chat.OpenAIChatBackend`` (``--model`` default
 ``gpt-6-luna``) in the same ``Emulator``: prompts without the ``Answer:`` prefill, spend capped by
 ``--max-usd``, ``--service-tier flex`` for Flex prices and ``--prompt-cache-mode`` for
@@ -90,6 +99,10 @@ from jevemu.backends.openrouter_chat import DEFAULT_MODEL as OPENROUTER_DEFAULT_
 from jevemu.backends.vllm_http import VLLMHTTPBackend
 from jevemu.bench.compare import compare, stats, stats_table, summarize
 from jevemu.bench.runner import RunResult, frozen_split, run_split
+from jevemu.clm_client import DEFAULT_URL as CLM_DEFAULT_URL
+from jevemu.clm_client import MODEL as CLM_MODEL
+from jevemu.clm_client import URL_ENV as CLM_URL_ENV
+from jevemu.clm_client import ClmClient
 from jevemu.compat.typesafe import DEFAULT_BACKEND_MODEL, DEFAULT_URL, MODEL_ENV, URL_ENV
 from jevemu.debias import debiaser_from_spec
 from jevemu.emulator import Emulator
@@ -144,8 +157,8 @@ def benchmark_names(value: str) -> list[str]:
 
 
 def default_system_id(args: argparse.Namespace) -> str:
-    if args.system == "jev":
-        return "jev"
+    if args.system in ("jev", "clm"):
+        return str(args.system)
     parts = [str(args.model).replace("/", "__")]
     if args.system == "openrouter" and args.provider:
         parts[0] += "@" + "+".join(args.provider).replace("/", "__")
@@ -191,15 +204,26 @@ async def run_all(args: argparse.Namespace, system: SystemOneClient, system_id: 
     return 0 if all(r.status == "complete" for r in results) else 1
 
 
-async def run_jev(args: argparse.Namespace, system_id: str) -> int:
-    load_env_file()
-    async with JevClient(max_usd=args.max_usd) as client:
+async def run_typesafe(args: argparse.Namespace, system_id: str, client: JevClient) -> int:
+    """Jev, or another server of its wire format, through a ``JevClient``."""
+    async with client:
         code = await run_all(args, client, system_id)
         print(
-            f"Jev: ${client.spent_usd:.6f} spent, {client.network_calls} network calls, "
-            f"{client.cache_hits} cache hits"
+            f"{client.service}: ${client.spent_usd:.6f} spent, {client.network_calls} network "
+            f"calls, {client.cache_hits} cache hits"
         )
     return code
+
+
+async def run_jev(args: argparse.Namespace, system_id: str) -> int:
+    load_env_file()
+    return await run_typesafe(args, system_id, JevClient(max_usd=args.max_usd))
+
+
+async def run_clm(args: argparse.Namespace, system_id: str) -> int:
+    load_env_file()
+    client = ClmClient(model=args.model, base_url=args.url, timeout=HTTP_TIMEOUT_S)
+    return await run_typesafe(args, system_id, client)
 
 
 async def run_emulator(args: argparse.Namespace, system_id: str) -> int:
@@ -298,11 +322,16 @@ async def run_openrouter(args: argparse.Namespace, system_id: str) -> int:
 
 RUNNERS = {
     "jev": run_jev,
+    "clm": run_clm,
     "emulator": run_emulator,
     "openai": run_openai,
     "openrouter": run_openrouter,
 }
-DEFAULT_MODELS = {"openai": OPENAI_DEFAULT_MODEL, "openrouter": OPENROUTER_DEFAULT_MODEL}
+DEFAULT_MODELS = {
+    "clm": CLM_MODEL,
+    "openai": OPENAI_DEFAULT_MODEL,
+    "openrouter": OPENROUTER_DEFAULT_MODEL,
+}
 
 
 def provider_slugs(value: str) -> list[str]:
@@ -313,6 +342,12 @@ def cmd_run(args: argparse.Namespace) -> int:
     if args.model is None:
         args.model = DEFAULT_MODELS.get(args.system) or os.environ.get(
             MODEL_ENV, DEFAULT_BACKEND_MODEL
+        )
+    if args.url is None:
+        args.url = (
+            os.environ.get(CLM_URL_ENV, CLM_DEFAULT_URL)
+            if args.system == "clm"
+            else os.environ.get(URL_ENV, DEFAULT_URL)
         )
     system_id = args.system_id or default_system_id(args)
     code = asyncio.run(RUNNERS[args.system](args, system_id))
@@ -374,7 +409,7 @@ def main() -> int:
 
     run = commands.add_parser("run", help="answer benchmark splits with one system")
     run.add_argument("--system", choices=tuple(RUNNERS), required=True)
-    run.add_argument("--system-id", help="run directory name (default: jev / the model name)")
+    run.add_argument("--system-id", help="run directory name (default: jev / clm / the model name)")
     run.add_argument("--benchmarks", type=benchmark_names, default=list(DATASETS))
     run.add_argument("--split", choices=SPLITS, default="select")
     run.add_argument("--out", type=Path, default=Path("runs/select"))
@@ -385,11 +420,16 @@ def main() -> int:
     run.add_argument(
         "--max-usd", type=float, default=1.0, help="API spend cap (Jev, OpenAI, OpenRouter)"
     )
-    run.add_argument("--url", default=os.environ.get(URL_ENV, DEFAULT_URL))
+    run.add_argument(
+        "--url",
+        help=f"server URL (emulator: ${URL_ENV}, else {DEFAULT_URL}; "
+        f"clm: ${CLM_URL_ENV}, else {CLM_DEFAULT_URL})",
+    )
     run.add_argument(
         "--model",
         help=f"backend model (emulator: ${MODEL_ENV}, else {DEFAULT_BACKEND_MODEL}; "
-        f"openai: {OPENAI_DEFAULT_MODEL}; openrouter: {OPENROUTER_DEFAULT_MODEL})",
+        f"clm: {CLM_MODEL}; openai: {OPENAI_DEFAULT_MODEL}; "
+        f"openrouter: {OPENROUTER_DEFAULT_MODEL})",
     )
     run.add_argument(
         "--max-rpm", type=int, default=450, help="openai/openrouter: request starts per minute"

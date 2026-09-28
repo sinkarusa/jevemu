@@ -1,12 +1,13 @@
 """Run manifests: what produced a run directory and how far each split got.
 
 A run directory is ``<out>/<system_id>/``. Its ``manifest.json`` names the system (for Jev the
-pinned model version; for the emulator the backend model and revision, engine version, server
-flags including the image, the ``JEVEMU_VLLM_*`` launch settings, the renderer's
-``template_id``, the scoring strategy and the calibrator) and, per ``<benchmark>.<split>``
-records file, the frozen split's metadata (``items_sha256``), status, counts, spend and every
-invocation (start/end, jevemu git commit, items called, spend) that wrote to it. ``totals`` sums
-the splits. The manifest is rewritten atomically after every change.
+pinned model version; for CLM the served model id, its ``GET /v1/models`` entry and the pinned
+head, encoder, image and package; for the emulator the backend model and revision, engine
+version, server flags including the image, the ``JEVEMU_VLLM_*`` launch settings, the
+renderer's ``template_id``, the scoring strategy and the calibrator) and, per
+``<benchmark>.<split>`` records file, the frozen split's metadata (``items_sha256``), status,
+counts, spend and every invocation (start/end, jevemu git commit, items called, spend) that
+wrote to it. ``totals`` sums the splits. The manifest is rewritten atomically after every change.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from jevemu.backends.base import PRICE_ID_FLAG
 from jevemu.calibrate import CalibratorRegistry
+from jevemu.clm_client import ClmClient, provenance
 from jevemu.emulator import Emulator
 from jevemu.eval.splits import SplitMetadata, SplitName
 from jevemu.jev_client import JevClient
@@ -171,12 +173,25 @@ def git_state(root: Path = _ROOT) -> tuple[str | None, bool | None]:
 async def describe_system(system: SystemOneClient) -> dict[str, Any]:
     """The identity of ``system`` recorded in the manifest (resuming requires it unchanged).
 
+    A CLM server must list the pinned model (:meth:`~jevemu.clm_client.ClmClient.served_model`),
+    whose entry is recorded with the pins of :func:`~jevemu.clm_client.provenance`; like the
+    emulator (``kind == "emulator"``), a ``kind == "clm"`` run is priced by GPU time.
+
     The emulator is warmed up first so its backend identity is known. An emulator over a paid
     API also records the backend's ``price_id`` flag (:data:`~jevemu.backends.base.PRICE_ID_FLAG`),
     which makes :class:`~jevemu.eval.costs.PriceBook` token-price it instead of by GPU time, and
     a price not built into ``TOKEN_PRICES`` as ``token_price`` (``BackendInfo.price``: OpenRouter's
     snapshot). ``token_price`` is not identity: a resumed run keeps the first invocation's.
     """
+    if isinstance(system, ClmClient):
+        served = await system.served_model()
+        return {
+            "kind": "clm",
+            "model": system.model,
+            "base_url": system.base_url,
+            "served": served.model_dump(),
+            **provenance(),
+        }
     if isinstance(system, JevClient):
         return {"kind": "jev", "model": system.model, "base_url": system.base_url}
     if isinstance(system, Emulator):

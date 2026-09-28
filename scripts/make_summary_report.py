@@ -11,8 +11,10 @@ Two splits answer two questions:
 
 - **Landscape** (split ``screen``, 2,499 items): every emulator candidate listed in
   ``reports/speed_quality/metrics.json`` (its ``candidates``: preset, label, size class, run
-  directory; that report checks their protocol), plus Jev and the API-served models of
-  :data:`FINALISTS`. Macro accuracy and Brier score against questions per second.
+  directory; that report checks their protocol), plus Jev, the API-served models of
+  :data:`FINALISTS` and :data:`CLM`, a dual encoder that answers Jev's wire format (kept out of
+  the local models' frontier and counts). Macro accuracy and Brier score against questions per
+  second.
 - **Finalists** (split ``holdout``, the half model selection never saw): :data:`FINALISTS`.
   Accuracy with paired differences against Jev, Brier and ECE raw and calibrated, q/s, cost,
   latency, and reliability diagrams pooled and per dataset.
@@ -46,7 +48,7 @@ what the service's own limits (:class:`ServiceLimits`) and the in-flight bound w
 it. Local speed is one machine (:data:`LOCAL_SETUP`). Every local and API run the page reads (the
 finalists' ``holdout`` and speed runs, the landscape's ``screen`` runs) must have answered in
 exactly one model call per question (diagnostics ``n_backend_calls == 1``,
-:func:`check_one_call`); Jev's records carry no diagnostics.
+:func:`check_one_call`); Jev's and CLM's records carry no diagnostics.
 
 **Unanswered items.** A run with failed items counts as incomplete, except for the items a
 finalist declares in ``Finalist.unanswered``: the failed items of each declared split must be
@@ -956,6 +958,34 @@ class LandscapeEntry:
     """Key of the finalist this point is (highlighted), if any."""
     max_rpm: int | None = None
     limits: ServiceLimits | None = None
+    one_call_checked: bool = True
+    """Its records carry diagnostics, so :func:`check_one_call` applies. Not for :data:`CLM`,
+    which answers Jev's wire format through :class:`jevemu.clm_client.ClmClient` (one request per
+    question, records without diagnostics, as Jev's)."""
+
+
+CLM_RUN = _run("clm")
+CLM = LandscapeEntry(
+    key="clm",
+    label="CLM-8B (local)",
+    group="Dual encoder",
+    color="#cf222e",
+    kind="local",
+    run=CLM_RUN,
+    speed=(CLM_RUN, LANDSCAPE_SPLIT),
+    note="A dual encoder, not an emulator: Qwen3-8B embeddings scored by a 20M-parameter head, "
+    "answering the same wire format as Jev, one RTX 3090",
+    finalist=None,
+    one_call_checked=False,
+)
+"""CLM-8B (https://github.com/Contrastive-LM/CLM), a landscape point only: it answers Jev's
+``POST /v1/systemone`` wire format, but it is not an emulator candidate, so it stays out of the
+local models' frontier and counts (:func:`is_emulator_candidate`)."""
+
+
+def is_emulator_candidate(entry: Mapping[str, Any]) -> bool:
+    """A local model of the speed/quality registry (grouped by size class), unlike :data:`CLM`."""
+    return entry["kind"] == "local" and entry["group"] in SIZE_CLASS_COLORS
 
 
 def landscape_entries(ready: Sequence[Finalist]) -> list[LandscapeEntry]:
@@ -998,7 +1028,10 @@ def landscape_entries(ready: Sequence[Finalist]) -> list[LandscapeEntry]:
                     limits=f.limits,
                 )
             )
-    return entries
+    done = complete_benchmarks(CLM.run, LANDSCAPE_SPLIT)
+    if done != set(DATASETS):
+        fail(f"{CLM.label}: {LANDSCAPE_SPLIT} runs incomplete ({len(done)}/{len(DATASETS)})")
+    return [*entries, CLM]
 
 
 def speed_note(kind: Kind, summary: Mapping[str, Any], max_rpm: int | None) -> str:
@@ -1075,7 +1108,7 @@ def collect(prices: PriceBook) -> dict[str, Any]:
     entries = landscape_entries(ready)
     checked_runs = [
         *[run for f in ready if f.kind != "jev" for run in ((f.run, FINAL_SPLIT), f.speed)],
-        *[(e.run, LANDSCAPE_SPLIT) for e in entries if e.kind != "jev"],
+        *[(e.run, LANDSCAPE_SPLIT) for e in entries if e.kind != "jev" and e.one_call_checked],
     ]
     declared = {f.run: f for f in ready}
     for run_dir, split in dict.fromkeys(checked_runs):
@@ -1286,7 +1319,8 @@ def has_x(system: Mapping[str, Any], view: str) -> bool:
 
 def landscape_figure(data: Mapping[str, Any], metric: str) -> dict[str, Any]:
     """Accuracy (``metric="accuracy"``) or Brier (raw and calibrated) against q/s or tokens per
-    question, one point per system, local candidates grouped by size class."""
+    question, one point per system, local candidates grouped by size class, CLM labeled apart
+    from them (outside their frontier)."""
     states = speed_states(data, metric)
     fig = Figure.empty([label for _, _, label in states])
     higher = metric == "accuracy"
@@ -1294,7 +1328,7 @@ def landscape_figure(data: Mapping[str, Any], metric: str) -> dict[str, Any]:
     for k, (view, field, _) in enumerate(states):
         entries = [e for e in data["landscape"] if has_x(e, view)]
         point = point_maker(view, field, with_note=True)
-        local = [e for e in entries if e["kind"] == "local"]
+        local = [e for e in entries if is_emulator_candidate(e)]
         lines = {
             mode: frontier_line([point(e, mode) for e in local], higher_is_better=higher, mode=mode)
             for mode in MODES
@@ -1327,7 +1361,7 @@ def landscape_figure(data: Mapping[str, Any], metric: str) -> dict[str, Any]:
                 )
 
             fig.add_modes(group_of, k)
-        highlighted = [e for e in entries if e["finalist"]]
+        highlighted = [e for e in entries if e["finalist"] or e["key"] == CLM.key]
         corners = {mode: frontier_corners(line, mode) for mode, line in lines.items()}
         add_labeled(
             fig, k, highlighted, entries, point, 13, value, view, LANDSCAPE_PLOT_PX, corners
@@ -2251,7 +2285,7 @@ def headline(data: Mapping[str, Any]) -> list[str]:
 
 def landscape_summary(data: Mapping[str, Any]) -> str:
     view = "all"
-    local = [e for e in data["landscape"] if e["kind"] == "local" and view in e["views"]]
+    local = [e for e in data["landscape"] if is_emulator_candidate(e) and view in e["views"]]
     pts_ = [(e["views"][view]["qps"], e["views"][view]["accuracy"][0]) for e in local]
     kept = sorted(frontier(pts_, higher_is_better=True), key=lambda i: pts_[i][0])
     steps = ", ".join(
@@ -2259,13 +2293,15 @@ def landscape_summary(data: Mapping[str, Any]) -> str:
     )
     best = max(local, key=lambda e: e["views"][view]["accuracy"][0])
     jev = next(e for e in data["landscape"] if e["kind"] == "jev")
+    clm = next(e for e in data["landscape"] if e["key"] == CLM.key)["views"][view]
     return (
         f"Of the {len(local)} local models, scored on all 9 benchmarks, the most accurate is "
         f"{esc(best['label'])} at {pct(best['views'][view]['accuracy'][0])}. Jev scores "
         f"{pct(jev['views'][view]['accuracy'][0])} on the same questions (by the argmax of its "
         "probabilities, like every system here; <code>reports/speed_quality</code> scores Jev by "
         f"its returned choice: {pct(jev['choice_accuracy_speed_quality'])}). The accuracy "
-        f"frontier, from slowest to fastest: {steps}."
+        f"frontier, from slowest to fastest: {steps}. CLM-8B, a local dual encoder counted apart "
+        f"from those models, scores {pct(clm['accuracy'][0])} at {qps_text(clm['qps'])} q/s."
     )
 
 
@@ -2552,7 +2588,7 @@ def figure_block(data: Mapping[str, Any], fig_id: str) -> str:
 def splits_section(data: Mapping[str, Any]) -> str:
     """The "Data splits" section: which split every number comes from, and why."""
     n, views = data["splits"], data["views"]
-    n_local = sum(1 for e in data["landscape"] if e["kind"] == "local")
+    n_local = sum(1 for e in data["landscape"] if is_emulator_candidate(e))
 
     def sizes(split: str) -> str:
         return "<br>".join(f"{n[split][v]:,} ({esc(views[v]['short'])})" for v in VIEW_ORDER)
@@ -2560,7 +2596,7 @@ def splits_section(data: Mapping[str, Any]) -> str:
     rows = [
         (
             "screen",
-            f"All {n_local} local candidates, Jev and the API models",
+            f"All {n_local} local candidates, CLM-8B, Jev and the API models",
             "A quick first comparison of every candidate: at most 300 questions per benchmark, "
             "taken from <code>select</code>.",
             "The figures of all candidates.",
@@ -2814,8 +2850,12 @@ labels, in one model call per question. Questions with more than {LETTER_LIMIT} 
 letters. Local models use {LOCAL_SETUP}. API models run with reasoning turned off and must reply
 <code>{{&quot;answer&quot;: &quot;&lt;label&gt;&quot;}}</code> with a label from a fixed list
 (Structured Outputs); the probabilities come from the logprobs (log probabilities) where the
-label starts. In the figures, filled markers are local models and hollow markers are API
-services.</p>
+label starts. CLM-8B (<a href='https://github.com/Contrastive-LM/CLM'>Contrastive-LM/CLM</a>),
+shown on the <code>screen</code> split only, is a dual encoder: Qwen3-8B embeds the state and
+question once and each option's text on its own, and a 20M-parameter head scores the options by
+scaled cosine similarity. It answers Jev's wire format, one request per question, on one RTX
+3090. In the figures, filled markers are local models (CLM-8B included) and hollow markers are
+API services.</p>
 {cards(data)}
 {pending_note}
 <p class=note>Benchmarks: GPQA-Diamond and LEXam (both with an "I don't know" option), MMLU-Pro,
@@ -2833,9 +2873,9 @@ buttons above each figure switch between that view and all 9.</p>
 these numbers are lower than its holdout numbers further down: <code>screen</code> is a
 different, smaller set of questions. Jev's q/s here is its holdout rate, since our request
 limiter sets it on every split. {landscape_summary(data)}</p>
-<p>The dotted line is the Pareto frontier of the local models: the ones nothing else beats on
-both speed and score. With the x axis set to tokens, it joins the ones nothing else beats on both
-tokens used and score.</p>
+<p>The dotted line is the Pareto frontier of the local models, CLM-8B left out: the ones nothing
+else beats on both speed and score. With the x axis set to tokens, it joins the ones nothing else
+beats on both tokens used and score.</p>
 <p>Tokens per question count every prompt token sent and every token generated. Each system
 counts in its own tokenizer. Jev's count includes the tokens it generates internally.</p>
 {figure_block(data, "fig-land-acc")}

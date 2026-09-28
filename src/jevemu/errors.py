@@ -146,12 +146,13 @@ class JevResponseError(JevError):
 
 
 class JevVersionDrift(JevError):
-    """Jev answered with a model version other than the pinned one."""
+    """Jev (or another server driven by ``JevClient``, named by ``service``) answered with a
+    model version other than the pinned one."""
 
-    def __init__(self, expected: str, actual: str) -> None:
+    def __init__(self, expected: str, actual: str, *, service: str = "Jev") -> None:
         self.expected = expected
         self.actual = actual
-        super().__init__(f"Jev answered with model {actual!r}, pinned {expected!r}")
+        super().__init__(f"{service} answered with model {actual!r}, pinned {expected!r}")
 
 
 class JevBudgetExceeded(JevError, BudgetExceeded):

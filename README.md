@@ -26,7 +26,9 @@ scale. Every system answers the same frozen questions. Each benchmark was split 
 model ran:
 
 - `screen` (2,499 questions): a small sample of `select`. All 22 local candidates answered it,
-  to pick the finalists. Only the summary report's figures of all candidates use it.
+  to pick the finalists. Only the summary report's figures of all candidates use it. CLM-8B, a
+  dual encoder that answers Jev's wire format (below), scored 24.7% macro accuracy on it and is
+  not a finalist ([selection.md](docs/research/selection.md#clm-8b-dual-encoder)).
 - `select`: half of each benchmark. Every choice (finalists, prompt layout, quantized build,
   vLLM settings) was made on it.
 - `holdout` (17,340 questions): the other half. No choice was made on it. Every number below
@@ -78,7 +80,7 @@ Further reading:
 - [Summary report](reports/summary/index.html): interactive HTML. Download it and open it in a
   browser; GitHub shows only the source. It covers:
   - accuracy and Brier score (the mean squared error of the probabilities) against speed, for
-    22 local models and the API models;
+    22 local models, CLM-8B and the API models;
   - the finalists on holdout;
   - reliability diagrams;
   - how calibration works;
@@ -199,6 +201,7 @@ write one for paired runs.
 
 ```bash
 uv run python scripts/run_split.py run --system jev --benchmarks all --split select --out runs/select
+uv run python scripts/run_split.py run --system clm --benchmarks all   # CLM-8B on docker/clm
 uv run python scripts/run_split.py run --system emulator --system-id NAME --strategy auto_single  # vLLM from env
 uv run python scripts/run_split.py run --system openai --strategy constrained \
   --prompt-cache-mode explicit --benchmarks all   # skips mmlu_pro, banking77, clinc150
@@ -257,6 +260,26 @@ masking, nondeterminism, prompt caching, tokenizer). Results:
 
 Measured behavior:
 [docs/research/openrouter_probe_report.md](docs/research/openrouter_probe_report.md).
+
+`--system clm` runs CLM-8B from [Contrastive-LM/CLM](https://github.com/Contrastive-LM/CLM)
+(Apache-2.0), a dual encoder: Qwen3-8B embeds the state and every option, and a 20M-parameter
+projection head scores the options against the state. Its server, `clm-serve`, answers the same
+`POST /v1/systemone` wire format as Jev, so the Jev client drives it
+(`jevemu.clm_client.ClmClient`) on all 9 benchmarks.
+
+```bash
+eval "$(scripts/serve_clm.sh | grep '^export ')"   # docker compose -f docker/clm/compose.yaml up -d
+uv run python scripts/run_split.py run --system clm --benchmarks all --split select --out runs/select
+```
+
+- The compose file pins the vLLM image, the Qwen3-8B revision, the `contrastive-lm` wheel and
+  the head (`Contrastive-LM/CLM-v0.1-8B`, checked by sha256). It serves the head as
+  `clm-v0.1-8b-b2b4a8c9c2d3`, named after the first 12 hex digits of that sha256, so another head
+  can never answer or hit the response cache under that name.
+- No API key is needed unless the server sets `CLM_API_KEY`. `--url` defaults to
+  `JEVEMU_CLM_URL`, else `http://localhost:8700`.
+- Responses are cached in `~/.cache/jevemu/clm_cache.sqlite`. The manifest records the pins, and
+  `stats` prices the run by GPU time, like the emulator.
 
 Calibration runs on `holdout`. `scripts/calibrate.py crossfit NAME=RUN_DIR ...` cross-fits
 every registered calibrator (5 folds by question id) for Jev and the emulator alike. It reports

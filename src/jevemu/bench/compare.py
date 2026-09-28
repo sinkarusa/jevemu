@@ -18,8 +18,8 @@ whose gold differs.
 :class:`~jevemu.eval.costs.PriceBook` (per-item costs: :mod:`jevemu.eval.costs`): per benchmark
 and pooled, the items, input/output tokens (mean per item and total), prompt-cache hits,
 backend calls per item, latency p50/p95, throughput, cost in total, per 1,000 items and per
-1,000 correct answers, and GPU-hours for the local emulator. :func:`stats_table` lays several
-runs side by side, one row per system, with the macro accuracy next to the cost.
+1,000 correct answers, and GPU-hours for local GPU systems (emulator, CLM). :func:`stats_table`
+lays several runs side by side, one row per system, with the macro accuracy next to the cost.
 
 Throughput (q/s) is measured from the run manifest: the items the timed invocations sent to the
 system (called, minus response-cache hits), divided by their summed start-to-end wall time (per
