@@ -1195,12 +1195,30 @@ The screen answers show where it fails. On SST-5 it nearly always picks an extre
 2 World). The option labels are embedded without the question, so on the reasoning benchmarks
 (MMLU-Pro, GPQA, ARC) an option such as a bare number carries no context.
 
-The examples in CLM's README reproduce only roughly on our pinned server. The tides example ranks
-0.994 (README 0.997); the typed example gives billing 0.988 (README 0.939), urgency 0.84 (README
-0.41) and frustration 2.00 (README 1.98). The head or encoder we serve may therefore differ from the
-one behind the README numbers; our serving follows their documented command. CLM's own claims (on
-par with Jev, up to 9x faster) are on agentic, tool-calling and game tasks, which this benchmark
-does not cover.
+An audit of the setup found no integration bug. Our server matches upstream's own captured output:
+their playground screenshot (a real `clm-serve`, `clm-latest`) shows urgency 84.8%, billing 98.8%
+and frustration 2.00, and we get 0.84, 0.988 and 2.00. The numbers in the README's code comments
+(urgency 0.41, billing 0.939, frustration 1.98) match neither the screenshot nor any run, so they
+are not a usable reference. The audit also found:
+
+- The encoder input matches the pre-training embeddings the head was trained on. Qwen3-8B vectors
+  from vLLM agree with an in-process transformers last-token embedding at cosine 0.9999, and fresh
+  question/answer pairs sit where the stored pre-training pairs do. Appending an end token or using
+  the chat template moves them away.
+- The PyPI wheel scores exactly like GitHub main (`bb42c6c`), the head file is the only one ever
+  uploaded to the HF repo, and turning off the server's vector cache or sending one request at a
+  time leaves accuracy within 1.5 points on 200-item samples.
+- On `LocalLLaMA/typed-decisions` (test, 2,000 decisions), run through upstream's own code, it
+  scores 35.8%, below the per-question majority label (52.2%). Jev 1.13 is listed at 72.7% there.
+- Most of the GPQA result comes from the prompt. The IDK instructions name the option ("E (I don't
+  know) earns 0"), and a similarity model latches onto that phrase. With the phrase removed, IDK
+  drops from 0.899 to 0.152 and accuracy rises to 0.283 (chance for 4 options). Jev gets the same
+  instructions, so the benchmark stays as it is.
+- Two cold servers disagree on up to 7.5% of predictions (bf16 embedding noise amplified by a logit
+  scale of 100); the response cache keeps the recorded answers fixed.
+
+CLM's own claims (on par with Jev, up to 9x faster) are on agentic, tool-calling and game tasks,
+which this benchmark does not cover.
 
 ## Speed/quality trade-off
 
